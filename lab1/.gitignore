@@ -1,0 +1,12 @@
+*.gcno
+*.gcda
+*.info
+*.cov
+run_tests*
+*.gcov
+*.gcno
+*.gcda
+*.info
+*.cov
+run_tests*
+*.gcov
