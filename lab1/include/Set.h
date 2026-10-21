@@ -21,7 +21,7 @@ class StringElement : public SetElement {
 private:
     std::string value; //Значение строкового элемента
 public:
-    explicit StringElement(const std::string& val);
+    explicit StringElement(const std::string& val); //запрещено неявное преобразование
     std::string toString() const override;
     bool operator==(const SetElement& other) const override;
     std::shared_ptr<SetElement> clone() const override;
