@@ -10,3 +10,5 @@ run_tests*
 *.cov
 run_tests*
 *.gcov
+test_poly
+test_poly_cov
