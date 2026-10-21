@@ -163,13 +163,11 @@ std::ostream& operator<<(std::ostream& os, const Polynomial& p) { //поток �
 
 std::istream& operator>>(std::istream& is, Polynomial& p) { 
     int degree;
-    std::cout << "Enter degree: ";
     is >> degree;
     if (degree < 0) {
     	throw std::invalid_argument("Degree cannot be negative");
     }
     std::vector<double> coeffs(degree + 1);
-    std::cout << "Enter coefficients from lowest to highest: ";
     for (int i = 0; i <= degree; ++i) {
         is >> coeffs[i];
     }
