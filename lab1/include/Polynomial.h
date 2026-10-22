@@ -4,59 +4,162 @@
 #include <vector>
 #include <iostream>
 
+/**
+ * @file Polynomial.h
+ * @brief Заголовочный файл для класса, реализующего многочлен (полином).
+ */
+
+/**
+ * @brief Класс, представляющий многочлен.
+ */
 class Polynomial {
 private:
-    std::vector<double> coefficients; //Коэффициенты многочлена (индекс = степень)
-    void removeLeadingZeros(); //Удаляет ведущие нули из вектора коэффициентов
+    std::vector<double> coefficients; ///< Коэффициенты многочлена (индекс = степень)
+    
+    /**
+     * @brief Удаляет ведущие нули из вектора коэффициентов.
+     */
+    void removeLeadingZeros(); 
 
 public:
-    //конструктор по умолчанию создает нулевой многочлен 0.0
+    /**
+     * @brief Конструктор по умолчанию. Создает нулевой многочлен 0.0.
+     */
     Polynomial();
 
-    //Конструктор из вектора коэффициентов explicit запрещает неявные преобразования
+    /**
+     * @brief Конструктор из вектора коэффициентов.
+     * @param coeffs Вектор коэффициентов (индекс = степень).
+     */
     explicit Polynomial(const std::vector<double>& coeffs);
 
-    // оператор присваивания и деструктор, так как мы используем std::vector
+    /**
+     * @brief Конструктор копирования по умолчанию.
+     */
     Polynomial(const Polynomial& other) = default;
+    
+    /**
+     * @brief Оператор присваивания копированием по умолчанию.
+     * @param other Другой многочлен.
+     * @return Ссылка на текущий многочлен.
+     */
     Polynomial& operator=(const Polynomial& other) = default;
+    
+    /**
+     * @brief Деструктор по умолчанию.
+     */
     ~Polynomial() = default;
 
-//Получение коэффициента при заданной степени. degree Степень. return Коэффициент (0.0, если степень больше текущей).
+    /**
+     * @brief Получение коэффициента при заданной степени.
+     * @param degree Степень.
+     * @return Коэффициент (0.0, если степень больше текущей).
+     */
     double operator[](int degree) const;
 
-//Вычисление значения многочлена для заданного аргумента. x Значение переменной. return Значение многочлена.
+    /**
+     * @brief Вычисление значения многочлена для заданного аргумента.
+     * @param x Значение переменной.
+     * @return Значение многочлена.
+     */
     double operator()(double x) const;
 
-//Сложение двух многочленов.
+    /**
+     * @brief Сложение двух многочленов.
+     * @param other Другой многочлен.
+     * @return Новый многочлен (сумма).
+     */
     Polynomial operator+(const Polynomial& other) const;
+    
+    /**
+     * @brief Сложение с присваиванием.
+     * @param other Другой многочлен.
+     * @return Ссылка на текущий многочлен.
+     */
     Polynomial& operator+=(const Polynomial& other);
 
-//Вычитание двух многочленов.
+    /**
+     * @brief Вычитание двух многочленов.
+     * @param other Другой многочлен.
+     * @return Новый многочлен (разность).
+     */
     Polynomial operator-(const Polynomial& other) const;
+    
+    /**
+     * @brief Вычитание с присваиванием.
+     * @param other Другой многочлен.
+     * @return Ссылка на текущий многочлен.
+     */
     Polynomial& operator-=(const Polynomial& other);
 
-//Произведение двух многочленов.
+    /**
+     * @brief Произведение двух многочленов.
+     * @param other Другой многочлен.
+     * @return Новый многочлен (произведение).
+     */
     Polynomial operator*(const Polynomial& other) const;
+    
+    /**
+     * @brief Произведение с присваиванием.
+     * @param other Другой многочлен.
+     * @return Ссылка на текущий многочлен.
+     */
     Polynomial& operator*=(const Polynomial& other);
 
-//Деление двух многочленов (упрощенное, возвращает частное).
+    /**
+     * @brief Деление двух многочленов (упрощенное, возвращает частное).
+     * @param other Другой многочлен.
+     * @return Новый многочлен (частное).
+     */
     Polynomial operator/(const Polynomial& other) const;
+    
+    /**
+     * @brief Деление с присваиванием.
+     * @param other Другой многочлен.
+     * @return Ссылка на текущий многочлен.
+     */
     Polynomial& operator/=(const Polynomial& other);
 
-//Сравнение на равенство.
+    /**
+     * @brief Сравнение многочленов на равенство.
+     * @param other Другой многочлен.
+     * @return true, если многочлены равны.
+     */
     bool operator==(const Polynomial& other) const;
+    
+    /**
+     * @brief Сравнение многочленов на неравенство.
+     * @param other Другой многочлен.
+     * @return true, если многочлены не равны.
+     */
     bool operator!=(const Polynomial& other) const;
 
-//Получение степени многочлена.
+    /**
+     * @brief Получение степени многочлена.
+     * @return Степень многочлена.
+     */
     int degree() const;
 
-//Проверка, является ли многочлен нулевым.
+    /**
+     * @brief Проверка, является ли многочлен нулевым.
+     * @return true, если многочлен нулевой.
+     */
     bool isZero() const;
 
-//Оператор вывода в поток.
+    /**
+     * @brief Оператор вывода многочлена в поток.
+     * @param os Поток вывода.
+     * @param p Многочлен.
+     * @return Ссылка на поток вывода.
+     */
     friend std::ostream& operator<<(std::ostream& os, const Polynomial& p);
 
-//Оператор чтения из потока.
+    /**
+     * @brief Оператор чтения многочлена из потока.
+     * @param is Поток ввода.
+     * @param p Многочлен.
+     * @return Ссылка на поток ввода.
+     */
     friend std::istream& operator>>(std::istream& is, Polynomial& p);
 };
 
