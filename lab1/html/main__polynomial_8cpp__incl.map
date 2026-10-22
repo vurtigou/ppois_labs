@@ -1,0 +1,11 @@
+<map id="src/main_polynomial.cpp" name="src/main_polynomial.cpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,190,33"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="10,157,89,184"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="75,36,54,55,35,82,31,97,31,112,39,142,33,142,26,112,26,96,30,80,50,52,77,31"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="134,157,197,184"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="119,31,145,52,165,80,173,111,172,143,168,141,168,112,160,82,141,55,119,36"/>
+<area shape="rect" id="Node000004" href="$Polynomial_8h.html" title="Заголовочный файл для класса, реализующего многочлен (полином)." alt="" coords="44,81,151,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="99,31,100,66,95,65,96,36"/>
+<area shape="poly" id="edge5_Node000004_Node000002" title=" " alt="" coords="91,108,68,145,64,142,87,111"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="111,107,146,145,140,145,109,112"/>
+</map>
