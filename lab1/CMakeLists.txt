@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Название проекта
-project(Lab1_OOП LANGUAGES CXX)
+project(Lab1_OOP LANGUAGES CXX)
 
 # Стандарт C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -21,18 +21,18 @@ endif()
 # СБОРКА ПРОГРАММ С МЕНЮ (CLI)
 # ==========================================
 
-# 1. Меню для класса Set
-add_executable(set_app src/main_set.cpp src/Set.cpp)
+# 1. Меню для класса Set (лежит в папке app)
+add_executable(set_app app/main_set.cpp src/Set.cpp)
 
-# 2. Меню для класса Polynomial
-add_executable(poly_app src/main_polynomial.cpp src/Polynomial.cpp)
+# 2. Меню для класса Polynomial (лежит в папке app)
+add_executable(poly_app app/main_polynomial.cpp src/Polynomial.cpp)
 
 # ==========================================
 # СБОРКА ЮНИТ-ТЕСТОВ
 # ==========================================
 
-# 3. Тесты для класса Set
-add_executable(set_tests src/tests_set.cpp src/Set.cpp)
+# 3. Тесты для класса Set (лежат в папке tests)
+add_executable(set_tests tests/tests_set.cpp src/Set.cpp)
 
-# 4. Тесты для класса Polynomial
-add_executable(poly_tests src/tests_polynomial.cpp src/Polynomial.cpp)
+# 4. Тесты для класса Polynomial (лежат в папке tests)
+add_executable(poly_tests tests/tests_polynomial.cpp src/Polynomial.cpp)
