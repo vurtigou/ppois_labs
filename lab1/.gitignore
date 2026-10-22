@@ -12,3 +12,5 @@ run_tests*
 *.gcov
 test_poly
 test_poly_cov
+html/
+latex/

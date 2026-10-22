@@ -1,9 +1,0 @@
-<map id="include/Set.h" name="include/Set.h">
-<area shape="rect" id="Node000001" title="Заголовочный файл, содержащий классы для работы с множествами (включая вложенные)." alt="" coords="135,5,240,33"/>
-<area shape="rect" id="Node000002" href="$Set_8cpp.html" title=" " alt="" coords="5,81,98,109"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="152,42,77,83,74,78,148,39"/>
-<area shape="rect" id="Node000003" href="$main__set_8cpp.html" title=" " alt="" coords="122,81,253,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="189,47,190,82,185,79,186,51"/>
-<area shape="rect" id="Node000004" href="$tests__set_8cpp.html" title=" " alt="" coords="277,81,407,109"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="230,37,317,80,312,81,228,43"/>
-</map>

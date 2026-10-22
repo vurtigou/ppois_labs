@@ -1,7 +1,0 @@
-<map id="SetElement" name="SetElement">
-<area shape="rect" id="Node000001" title="Базовый абстрактный класс для элемента множества." alt="" coords="110,5,206,33"/>
-<area shape="rect" id="Node000002" href="$classSetElementWrapper.html" title="Обертка для вложенного множества." alt="" coords="5,81,157,109"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="136,43,96,83,93,78,131,45"/>
-<area shape="rect" id="Node000003" href="$classStringElement.html" title="Элемент множества, хранящий простую строку." alt="" coords="180,81,294,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="185,41,226,81,220,80,183,46"/>
-</map>

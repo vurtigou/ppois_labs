@@ -1,5 +1,0 @@
-<map id="StringElement" name="StringElement">
-<area shape="rect" id="Node000001" title="Элемент множества, хранящий простую строку." alt="" coords="5,81,119,109"/>
-<area shape="rect" id="Node000002" href="$classSetElement.html" title="Базовый абстрактный класс для элемента множества." alt="" coords="14,5,110,33"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="64,47,65,81,59,80,60,51"/>
-</map>

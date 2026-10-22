@@ -1,7 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$classSetElement.html" title="Базовый абстрактный класс для элемента множества." alt="" coords="5,32,102,60"/>
-<area shape="rect" id="Node000001" href="$classSetElementWrapper.html" title="Обертка для вложенного множества." alt="" coords="150,5,301,33"/>
-<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="116,33,152,30,147,32,118,39"/>
-<area shape="rect" id="Node000002" href="$classStringElement.html" title="Элемент множества, хранящий простую строку." alt="" coords="169,57,282,85"/>
-<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="117,52,171,62,166,63,117,58"/>
-</map>
