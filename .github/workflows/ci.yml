@@ -40,7 +40,8 @@ jobs:
 
     - name: Run Static Analysis (Linter)
       run: |
-        cppcheck --enable=warning,performance -I include src/ || true
+        # ОБНОВЛЕНО: Теперь проверяем app/, src/ и tests/
+        cppcheck --enable=warning,performance -I include app/ src/ tests/ || true
 
   build-release:
     needs: test-and-analyze
