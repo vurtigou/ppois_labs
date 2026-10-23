@@ -1,9 +1,12 @@
 #include "../include/Set.h"
 #include <algorithm>
 
+
 // Реализация StringElement (элемент строка)
-//конструктор
-StringElement::StringElement(const std::string& val) : value(val) {} //список инициализации
+
+
+//Конструктор. Сохраняет строку val в поле value через список инициализации
+StringElement::StringElement(const std::string& val) : value(val) {} 
 
 std::string StringElement::toString() const { return value; }
 
@@ -13,39 +16,50 @@ bool StringElement::operator==(const SetElement& other) const {
     return strElem && value == strElem->value;
 }
 
+//вспомогательная функция для глубокого копирования
 std::shared_ptr<SetElement> StringElement::clone() const {
     return std::make_shared<StringElement>(value);
 }
 
+
 // Реализация SetElementWrapper (элемент множество)
+
+
 //конструктор
 SetElementWrapper::SetElementWrapper(std::shared_ptr<Set> s) : setPtr(s) {}
 
-std::string SetElementWrapper::toString() const { return setPtr->toString(); } //вызывает toString() у вложенного множества
+//вызывает toString() у вложенного множества
+std::string SetElementWrapper::toString() const { return setPtr->toString(); }
 
 bool SetElementWrapper::operator==(const SetElement& other) const {
     const SetElementWrapper* setElem = dynamic_cast<const SetElementWrapper*>(&other); //приведение к типу множества
     return setElem && *setPtr == *setElem->setPtr;
 }
-//копирование
+
+//копирование (вспомогательная функция)
 std::shared_ptr<SetElement> SetElementWrapper::clone() const {
     return std::make_shared<SetElementWrapper>(std::make_shared<Set>(*setPtr));
 }
 
-// Реализация Set
+
+// Реализация Set (множество)
+
+
 Set::Set() : elements{} {} // Пустое множество
 
 Set::Set(const std::vector<std::shared_ptr<SetElement>>& elems) : elements(elems) {
     removeDuplicates(); //удаляет дубликаты
 }
 
-Set::Set(const Set& other) { //конст копирования (глубокое копирование)
+//конст копирования (глубокое копирование)
+Set::Set(const Set& other) { 
     for (const auto& elem : other.elements) {
         elements.push_back(elem->clone()); //в конец нового пустого множества добавляем клон элемента старого множества
     }
 }
 
-Set& Set::operator=(const Set& other) { //оператор присваивания
+//оператор присваивания
+Set& Set::operator=(const Set& other) { 
     if (this != &other) {
         Set temp(other); //сработает конструктор копирования из прошлой функции
         std::swap(elements, temp.elements);  //меняет данные множеств местами
@@ -53,6 +67,7 @@ Set& Set::operator=(const Set& other) { //оператор присваиван�
     return *this;
 }
 
+//удаление повторяющихся элементов
 void Set::removeDuplicates() {
     std::vector<std::shared_ptr<SetElement>> uniqueElements;
     for (const auto& elem : elements) { //перебор всех элементов
@@ -70,20 +85,24 @@ void Set::removeDuplicates() {
     elements = uniqueElements;
 }
 
+//проверка на пустое множество
 bool Set::isEmpty() const {
     return elements.empty(); //встроенный элемент vector-а
 }
 
+//мощность множества
 size_t Set::getCardinality() const {
     return elements.size(); //встроенный элемент vector-а
 }
 
+//добавление элемента
 void Set::addElement(const std::shared_ptr<SetElement>& elem) {
     if (!(*this)[elem]) { //добавляем только если такого элемента нет
         elements.push_back(elem->clone());
     }
 }
 
+//удаление элемента
 void Set::removeElement(const std::shared_ptr<SetElement>& elem) {
     elements.erase(
         std::remove_if(elements.begin(), elements.end(),
@@ -92,7 +111,8 @@ void Set::removeElement(const std::shared_ptr<SetElement>& elem) {
     );
 }
 
-bool Set::operator[](const std::shared_ptr<SetElement>& elem) const { //проверка принадлежности
+//проверка принадлежности элемента множеству
+bool Set::operator[](const std::shared_ptr<SetElement>& elem) const { 
     for (const auto& e : elements) {
         if (*e == *elem) {
             return true;
@@ -101,7 +121,8 @@ bool Set::operator[](const std::shared_ptr<SetElement>& elem) const { //пров
     return false;
 }
 
-Set Set::operator+(const Set& other) const { //объединение
+//объединение (перегрузка +)
+Set Set::operator+(const Set& other) const { 
     Set result(*this);
     result += other;
     return result;
@@ -114,7 +135,8 @@ Set& Set::operator+=(const Set& other) {
     return *this;
 }
 
-Set Set::operator*(const Set& other) const { //пересечение
+//пересечение
+Set Set::operator*(const Set& other) const { 
     Set result;
     for (const auto& elem : elements) {
         if (other[elem]) {
@@ -129,7 +151,8 @@ Set& Set::operator*=(const Set& other) {
     return *this;
 }
 
-Set Set::operator-(const Set& other) const { //разность
+//разность
+Set Set::operator-(const Set& other) const { 
     Set result;
     for (const auto& elem : elements) {
         if (!other[elem]) {
@@ -144,7 +167,8 @@ Set& Set::operator-=(const Set& other) {
     return *this;
 }
 
-bool Set::operator==(const Set& other) const { //сравнение
+//сравнение
+bool Set::operator==(const Set& other) const { 
     if (elements.size() != other.elements.size()) {
         return false;
     }
@@ -160,9 +184,10 @@ bool Set::operator!=(const Set& other) const {
     return !(*this == other);
 }
 
-Set Set::getPowerSet() const { //булеан
+//булеан
+Set Set::getPowerSet() const { 
     Set powerSet;
-    powerSet.addElement(std::make_shared<SetElementWrapper>(std::make_shared<Set>())); //создает и добовляет пустое множество, которое так же является элементом множества
+    powerSet.addElement(std::make_shared<SetElementWrapper>(std::make_shared<Set>())); 
     
     for (const auto& elem : elements) {
         Set newSubsets; // сюда складывать новые подмножества, которые получатся, если добавить elem к старым
@@ -179,7 +204,8 @@ Set Set::getPowerSet() const { //булеан
     return powerSet;
 }
 
-std::string Set::toString() const { //вывод в строку
+//вывод в строку
+std::string Set::toString() const { 
     std::string result = "{";
     for (size_t i = 0; i < elements.size(); ++i) {
         result += elements[i]->toString();
@@ -221,20 +247,21 @@ namespace {
     }
 }
 
-Set Set::fromString(const std::string& str) { //парсинг строки в множество
+//парсинг строки в множество
+Set Set::fromString(const std::string& str) { 
     std::string cleaned = trim(str);
     if (cleaned.size() < 2 || cleaned.front() != '{' || cleaned.back() != '}') {
         throw std::invalid_argument("Invalid set format");
     }
     
     Set result;
-    std::string inner = cleaned.substr(1, cleaned.size() - 2);
+    std::string inner = cleaned.substr(1, cleaned.size() - 2); //сбрасывается первый и последний символ строки
     std::vector<std::string> tokens = tokenize(inner);
     
     for (const auto& token : tokens) { //перебор токенов
-        if (token.front() == '{' && token.back() == '}') { //если это вложенное множество
-            result.addElement(std::make_shared<SetElementWrapper>(std::make_shared<Set>(fromString(token))));
-        } else { //если это строка
+        if (token.front() == '{' && token.back() == '}') { 
+            result.addElement(std::make_shared<SetElementWrapper>(std::make_shared<Set>(fromString(token)))); //рекурсивный вызов для вложенного множества
+        } else { 
             result.addElement(std::make_shared<StringElement>(token));
         }
     }
@@ -248,7 +275,6 @@ std::ostream& operator<<(std::ostream& os, const Set& s) { //вывод в по�
 
 std::istream& operator>>(std::istream& is, Set& s) { //чтение из потока
     std::string input;
-    // Убрали std::cout! Класс просто читает то, что ему дают.
     std::getline(is, input); 
     s = Set::fromString(input);
     return is;
