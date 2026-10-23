@@ -89,7 +89,7 @@ cmake --build build
 ./build/poly_tests
 ```
 
-**Запуск тестов**
+**Замер покрытия кода**
 Для проверки покрытия используется `lcov` (требуется компиляция с флагом `-DENABLE_COVERAGE=ON`):
 ```bash
 cmake -B build -DENABLE_COVERAGE=ON
