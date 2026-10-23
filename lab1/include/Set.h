@@ -86,7 +86,7 @@ public:
      * @brief Получить значение строки.
      * @return Значение строки.
      */
-    std::string getValue() const { return value; }
+    const std::string& getValue() const { return value; }
 };
 
 class Set; // Предварительное объявление
