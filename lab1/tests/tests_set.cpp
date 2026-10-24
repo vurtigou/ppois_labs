@@ -172,6 +172,30 @@ void test_missing_operations() {
     ss << zeroSet;
     check(ss.str() == "{}", "Вывод пустого множества");
 }
+void test_missing_coverage_boost() {
+    std::cout << "\n--- Тестирование для повышения покрытия ---\n";
+    
+    // 1. Тест для getValue() (поднимает покрытие Set.h до 100%)
+    auto strElem = std::make_shared<StringElement>("test_str");
+    check(strElem->getValue() == "test_str", "Метод getValue() работает");
+
+    // 2. Тест для getSet() и toString() обертки (поднимает Set.cpp)
+    auto innerSet = std::make_shared<Set>();
+    innerSet->addElement(strElem);
+    auto wrapper = std::make_shared<SetElementWrapper>(innerSet);
+    
+    check(wrapper->getSet() == innerSet, "Метод getSet() возвращает внутреннее множество");
+    check(wrapper->toString() == "{test_str}", "Метод toString() у обертки работает");
+
+    // 3. Тест несовпадения типов (когда dynamic_cast возвращает nullptr)
+    // Это покроет те самые красные строчки "return false" в operator==
+    check(!(*strElem == *wrapper), "Сравнение Строки и Множества = false");
+    check(!(*wrapper == *strElem), "Сравнение Множества и Строки = false");
+
+    // 4. Тест глубокого клонирования обертки
+    auto clonedWrapper = wrapper->clone();
+    check(*wrapper == *clonedWrapper, "Клонирование обертки работает");
+}
 
 // ==========================================
 // MAIN
@@ -186,6 +210,9 @@ int main() {
     test_power_set();
     test_power_set();
     test_missing_operations();
+    test_power_set();
+    
+    test_missing_coverage_boost();
     
     std::cout << "\n=========================================\n";
     std::cout << "РЕЗУЛЬТАТ: Пройдено " << passed_tests << " из " << total_tests << " тестов.\n";
