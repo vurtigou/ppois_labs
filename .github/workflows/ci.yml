@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./lab1 # ВАЖНО: Заходим в папку lab1!
+        working-directory: ./lab1
 
     steps:
     - uses: actions/checkout@v3
@@ -31,16 +31,26 @@ jobs:
         ./build/set_tests
         ./build/poly_tests
 
-    - name: Show Code Coverage
+    - name: Check Code Coverage (>90%)
       run: |
         cd build
         lcov --capture --directory . --output-file coverage.info
-        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        # Исключаем системные папки и сами тесты
+        lcov --remove coverage.info '/usr/*' 'tests/*' --output-file coverage.info
         lcov --list coverage.info
+        
+        # Магия: вытаскиваем процент из таблицы и сравниваем с 90
+        COVERAGE=$(lcov --list coverage.info | grep "Total:" | awk '{print $2}' | sed 's/%//')
+        echo "Текущее покрытие: $COVERAGE%"
+        
+        # Если покрытие меньше 90, выходим с ошибкой (красный крестик)
+        if awk "BEGIN {exit !($COVERAGE < 90.0)}"; then
+          echo "ОШИБКА: Покрытие меньше 90%! Пайплайн остановлен."
+          exit 1
+        fi
 
     - name: Run Static Analysis (Linter)
       run: |
-        # ОБНОВЛЕНО: Теперь проверяем app/, src/ и tests/
         cppcheck --enable=warning,performance -I include app/ src/ tests/ || true
 
   build-release:
@@ -51,7 +61,7 @@ jobs:
       contents: write 
     defaults:
       run:
-        working-directory: ./lab1 # И здесь тоже заходим в lab1
+        working-directory: ./lab1
 
     steps:
     - uses: actions/checkout@v3
