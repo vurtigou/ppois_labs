@@ -1,0 +1,82 @@
+name: C++ CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "feature/*" ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-analyze:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./lab1
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y g++ cmake lcov cppcheck
+
+    - name: Configure CMake (with Coverage)
+      run: cmake -B build -DENABLE_COVERAGE=ON
+
+    - name: Build Project
+      run: cmake --build build
+
+    - name: Run Unit Tests
+      run: |
+        ./build/set_tests
+        ./build/poly_tests
+
+    - name: Check Code Coverage (>90%)
+      run: |
+        cd build
+        lcov --capture --directory . --output-file coverage.info
+        # Исключаем системные папки и сами тесты
+        lcov --remove coverage.info '/usr/*' 'tests/*' --output-file coverage.info
+        lcov --list coverage.info
+        
+        # Магия: вытаскиваем процент из таблицы и сравниваем с 90
+        COVERAGE=$(lcov --list coverage.info | grep "Total:" | awk '{print $2}' | sed 's/%//')
+        echo "Текущее покрытие: $COVERAGE%"
+        
+        # Если покрытие меньше 90, выходим с ошибкой (красный крестик)
+        if awk "BEGIN {exit !($COVERAGE < 90.0)}"; then
+          echo "ОШИБКА: Покрытие меньше 90%! Пайплайн остановлен."
+          exit 1
+        fi
+
+    - name: Run Static Analysis (Linter)
+      run: |
+        cppcheck --enable=warning,performance -I include app/ src/ tests/ || true
+
+  build-release:
+    needs: test-and-analyze
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+    defaults:
+      run:
+        working-directory: ./lab1
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Release Binaries
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --config Release
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          lab1/build/set_app
+          lab1/build/poly_app
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
