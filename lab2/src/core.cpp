@@ -14,7 +14,7 @@
 // Внутренние хелперы
 namespace {
 
-std::string current_timestamp() {
+std::string current_timestamp() {  //возвращает текущее системное время
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm tm_buf{};
@@ -27,7 +27,7 @@ std::string current_timestamp() {
     oss << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%S");
     return oss.str();
 }
-
+//возвращает строку координат вида "lat,lon"
 std::pair<double, double> parse_coordinates(const std::string& coord) {
     auto comma = coord.find(',');
     if (comma == std::string::npos) {
@@ -74,6 +74,7 @@ bool ContactInfo::is_valid_contact() const {
 Identifier::Identifier(std::string prefix, int start_number)
     : prefix(std::move(prefix)), number(start_number) {}
 
+//Возвращает строку "<prefix>-<number>", увеличивает счетчик на 1
 std::string Identifier::generate_next() {
     std::string result = prefix + "-" + std::to_string(number);
     ++number;
@@ -86,6 +87,7 @@ Location::Location(std::string city, std::string address, std::string coordinate
       address(std::move(address)),
       coordinates(std::move(coordinates)) {}
 
+//Считает расстояние между двумя локациями в километрах по формуле гаверсинуса
 double Location::calculate_distance_to(const Location& other) const {
     if (coordinates.empty() || other.coordinates.empty()) {
         throw std::invalid_argument(
@@ -103,6 +105,7 @@ double Location::calculate_distance_to(const Location& other) const {
     double a = std::sin(dlat / 2) * std::sin(dlat / 2) +
                std::cos(rad(lat1)) * std::cos(rad(lat2)) *
                std::sin(dlon / 2) * std::sin(dlon / 2);
+    a = std::clamp(a, 0.0, 1.0);
     double c = 2.0 * std::atan2(std::sqrt(a), std::sqrt(1.0 - a));
     return R * c;
 }
@@ -114,6 +117,7 @@ AuditLog::AuditLog(std::size_t max_size) : max_size(max_size) {
     }
 }
 
+//добавление записи в журнал
 void AuditLog::record_action(const std::string& action) {
     if (entries.size() >= max_size) {
         entries.erase(entries.begin());
@@ -121,8 +125,8 @@ void AuditLog::record_action(const std::string& action) {
     entries.push_back(LogEntry{current_timestamp(), action});
 }
 
-std::vector<std::string> AuditLog::filter_by_period(const std::string& start_date,
-                                                    const std::string& end_date) const {
+//вектор строк с записями, чья дата попадает в заданный диапазон 
+std::vector<std::string> AuditLog::filter_by_period(const std::string& start_date, const std::string& end_date) const {
     std::vector<std::string> result;
     for (const auto& e : entries) {
         // "YYYY-MM-DD" — 10 символов
@@ -134,6 +138,7 @@ std::vector<std::string> AuditLog::filter_by_period(const std::string& start_dat
     return result;
 }
 
+//выводит отформатированно все записи журнала
 void AuditLog::print_logs() const {
     std::cout << "--- Audit Log ---" << std::endl;
     for (const auto& e : entries) {
@@ -144,7 +149,7 @@ void AuditLog::print_logs() const {
 
 // Oceanarium
 Oceanarium::Oceanarium(std::string name, const Location& location)
-    : name(std::move(name)), location(location) {
+    : name(std::move(name)), is_open(false), location(location) {
 
     if (this->name.empty()) {
         throw OceanariumError(
@@ -161,18 +166,31 @@ Oceanarium::Oceanarium(std::string name, const Location& location)
 Oceanarium::~Oceanarium() = default;
 
 void Oceanarium::open_for_day() {
+    if (is_open) {
+        std::cout << "Oceanarium " << name << " is already OPEN." << std::endl;
+        audit_log.record_action("Attempt to open Oceanarium '" + name
+                                + "': already open.");
+        return;
+    }
+    is_open = true;                                  
     std::cout << "Oceanarium " << name << " is now OPEN." << std::endl;
     audit_log.record_action("Oceanarium opened for the day.");
 }
 
 void Oceanarium::close_for_day() {
+    if (!is_open) {
+        std::cout << "Oceanarium " << name << " is already CLOSED." << std::endl;
+        audit_log.record_action("Attempt to close Oceanarium '" + name
+                                + "': already closed.");
+        return;
+    }
+    is_open = false;
     std::cout << "Oceanarium " << name << " is now CLOSED." << std::endl;
     audit_log.record_action("Oceanarium closed for the day.");
 }
 
-void Oceanarium::transfer_animal_between_tanks(const std::string& animal_id,
-                                               Tank* from_tank,
-                                               Tank* to_tank) {
+//перенос животных между танками
+void Oceanarium::transfer_animal_between_tanks(const std::string& animal_id, Tank* from_tank, Tank* to_tank) {
     if (!from_tank || !to_tank) {
         throw OceanariumError(
             "Ошибка перевода: Указатель на исходный или целевой танк равен nullptr.");
@@ -190,7 +208,7 @@ void Oceanarium::transfer_animal_between_tanks(const std::string& animal_id,
             "Ошибка перевода: Целевой танк не зарегистрирован в этом океанариуме.");
     }
 
-    // TODO: как только у Tank появятся методы contains_animal / remove_animal /
+    // TODO: как только у Tank появятся методы contains_animal / remove_animal ДОБАВИТЬ CONST ANIMAL ID
     // add_animal — здесь нужно будет проверить существование животного,
     // вместимость и совместимость видов (TankCapacityExceededError и т.п.),
     // а затем фактически перенести.
@@ -202,6 +220,7 @@ void Oceanarium::transfer_animal_between_tanks(const std::string& animal_id,
         "Ошибка перевода: перенос животных между танками ещё не реализован.");
 }
 
+//регистрирует танк в океанариуме
 void Oceanarium::add_tank(Tank* tank) {
     if (!tank) {
         throw OceanariumError(
@@ -212,9 +231,10 @@ void Oceanarium::add_tank(Tank* tank) {
             "Ошибка добавления: Этот танк уже зарегистрирован в океанариуме.");
     }
     tanks.push_back(tank);
-    audit_log.record_action("A new tank was added to Oceanarium.");
+    audit_log.record_action("Tank '" + tank->get_tank_id() + "' added.");
 }
 
+//регистрирует сотрудника в океанариуме
 void Oceanarium::add_employee(Employee* employee) {
     if (!employee) {
         throw OceanariumError(
@@ -226,4 +246,5 @@ void Oceanarium::add_employee(Employee* employee) {
     }
     employees.push_back(employee);
     audit_log.record_action("A new employee was hired.");
+    //TODO добавить id сотрудника
 }

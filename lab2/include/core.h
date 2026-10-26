@@ -88,6 +88,7 @@ public:
 class Oceanarium {
 private:
     std::string name;
+    bool is_open;
     Location location;
     std::vector<Tank*>     tanks;      // non-owning
     std::vector<Employee*> employees;  // non-owning
