@@ -21,11 +21,18 @@ double Habitat::calculate_biomass() const {
 }
 
 void Habitat::add_animal(Animal* animal) {
-    if (!animal) return; //TODO выыод класса исключения
-    //TODO     Заменить if (!animal) return; на выброс исключения (например, OceanariumError).
-    if(!check_suitability_for_animal(*animal)) return;
-    //TODO: вывод сообщения
+    if (!animal) {
+        throw NullPointerError("Habitat: Cannot add null animal.");
+    }
+    if (contains_animal(animal->get_id())) {
+        throw DuplicateEntityError("Habitat: Animal with ID " + animal->get_id() + " is already here.");
+    }
+    if (!check_suitability_for_animal(*animal)) {
+        throw UnsuitableHabitatError("Habitat: Unsuitable environment for animal " + animal->get_id());
+    }
+    
     animals.push_back(animal);
+    std::cout << "Animal " << animal->get_id() << " added to habitat." << std::endl;
 }
 
 bool Habitat::contains_animal(const std::string& animal_id) const {
@@ -64,10 +71,18 @@ void Exhibit::close_exhibit() {
 }
 
 void Exhibit::add_tank(Tank* tank) {
-    if (tank) {
-        tanks.push_back(tank);
-        tank->set_exhibit(this);
+    if (!tank) {
+        throw NullPointerError("Exhibit: Cannot add null tank.");
     }
+    // Проверка на дубликат
+    if (std::find(tanks.begin(), tanks.end(), tank) != tanks.end()) {
+        throw DuplicateEntityError("Exhibit: Tank " + tank->get_tank_id() + " is already in this exhibit.");
+    }
+    
+    // TODO: Если танк уже в другом зале, удалить его оттуда.
+    
+    tanks.push_back(tank);
+    tank->set_exhibit(this);
 }
 
 Tank::Tank(std::string id, const Habitat& hab, std::string filtration) 
@@ -83,8 +98,7 @@ void Tank::emergency_drain() {
 
 void Tank::attach_sensor(const std::string& sensor_id) {
     if (std::find(sensors.begin(), sensors.end(), sensor_id) != sensors.end()) {
-        std::cout << "Sensor " << sensor_id << " is already attached to tank " << tank_id << std::endl;
-        return;
+        throw DuplicateEntityError("Tank " + tank_id + ": Sensor " + sensor_id + " is already attached.");
     }
     sensors.push_back(sensor_id);
     std::cout << "Sensor " << sensor_id << " attached to tank " << tank_id << std::endl;
@@ -120,32 +134,37 @@ void Zone::list_tanks() const {
 }
 
 void Zone::add_tank(Tank* tank) {
-    if (tank) {
-        tanks.push_back(tank);
+    if (!tank) {
+        throw NullPointerError("Zone: Cannot add null tank.");
     }
+    if (std::find(tanks.begin(), tanks.end(), tank) != tanks.end()) {
+        throw DuplicateEntityError("Zone: Tank " + tank->get_tank_id() + " is already in this zone.");
+    }
+    tanks.push_back(tank);
 }
 
 QuarantineTank::QuarantineTank(Tank* t, std::string reason) 
     : tank(t), quarantine_reason(reason) {
     if (!tank) {
-        throw std::invalid_argument("QuarantineTank: tank cannot be null");
+        throw NullPointerError("QuarantineTank: Tank pointer cannot be null.");
     }
 }
 
 //TODO const get_id()
 void QuarantineTank::admit_animal(Animal* animal) {
-    if (!animal) return;
+    if (!animal) {
+        throw NullPointerError("QuarantineTank: Animal pointer cannot be null.");
+    }
     tank->add_animal(animal);
     std::cout << "Animal " << animal->get_id() << " admitted to quarantine. Reason: " << quarantine_reason << std::endl;
 }
 
 Animal* QuarantineTank::release_after_check(const std::string& animal_id) {
     Animal* released = tank->remove_animal(animal_id);
-    if (released) {
-        std::cout << "Quarantine check passed. Animal " << animal_id << " released from tank " << tank->get_tank_id() << std::endl;
-    } else {
-        std::cout << "Animal " << animal_id << " not found in quarantine tank." << std::endl;
+    if (!released) {
+        throw EntityNotFoundError("QuarantineTank: Animal " + animal_id + " not found in quarantine tank.");
     }
+    std::cout << "Quarantine check passed. Animal " << animal_id << " released from tank " << tank->get_tank_id() << std::endl;
     return released;
 }
 
@@ -155,12 +174,17 @@ Animal* QuarantineTank::release_after_check(const std::string& animal_id) {
 HabitatMap::HabitatMap(double scale) : scale(scale) {}
 
 void HabitatMap::add_zone(Zone* zone) {
-    if (zone) {
-        zones.push_back(zone);
+    if (!zone) {
+        throw NullPointerError("HabitatMap: Cannot add null zone.");
     }
+    if (std::find(zones.begin(), zones.end(), zone) != zones.end()) {
+        throw DuplicateEntityError("HabitatMap: Zone is already on the map.");
+    }
+    zones.push_back(zone);
 }
 
 Tank* HabitatMap::locate_tank(const std::string& tank_id) const {
     std::cout << "Searching for tank " << tank_id << " on map..." << std::endl;
+    // TODO: Реализовать реальный поиск (пройтись по зонам и их танкам)
     return nullptr; // Заглушка
 }

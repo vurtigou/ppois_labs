@@ -5,6 +5,7 @@
 
 #include "water.h"   // Для класса WaterQuality
 #include "biology.h" // Для класса Animal
+#include "exceptions.h"
 
 class Tank;
 
