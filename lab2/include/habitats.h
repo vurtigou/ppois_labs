@@ -21,16 +21,16 @@ private:
 public:
     Habitat(std::string type = "", double volume = 0.0, const WaterQuality& water = WaterQuality());
     
-    //проверка подходит ли среда для животного
+    //проверка подходит ли среда для животного TODO ВСПОМОГАТЕЛЬНАЯ
     bool check_suitability_for_animal(const Animal& animal) const;
     //сумма весов всех содержащихся животных
     double calculate_biomass() const;
-    
-    // Методы для работы с животными
-    void add_animal(Animal* animal); //добавить в начале check_suitability_for_animal
+
+    void add_animal(Animal* animal); //добавить в начале check_suitability_for_animal TODO ВСПОМОГАТЕЛЬНАЯ 
     
     //проверка есть ли животное с такими id
     bool contains_animal(const std::string& animal_id) const;
+    //убрать животное с конкретным id после успешного add_animal TODO ВСПОМОГАТЕЛЬНАЯ
     Animal* remove_animal(const std::string& animal_id);
     
     // Геттеры
@@ -51,6 +51,8 @@ public:
     
     void open_exhibit();
     void close_exhibit();
+    
+    //TODO функция которая составит список животных из всех танков этого зала для описания 
     
     void add_tank(Tank* tank);
     bool is_open() const { return is_open; }
@@ -107,11 +109,13 @@ public:
 class QuarantineTank {
 private:
     Tank* tank; //non-owning
+    //поле diagnosis животного
     std::string quarantine_reason;
 
 public:
     QuarantineTank(Tank* t = nullptr, std::string reason = "");
     
+    //TODO функция которая делает quarantine_reason диагнозом животного
     void admit_animal(Animal* animal);
     Animal* release_after_check(const std::string& animal_id);
 };

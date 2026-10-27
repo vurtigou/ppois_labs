@@ -189,37 +189,6 @@ void Oceanarium::close_for_day() {
     audit_log.record_action("Oceanarium closed for the day.");
 }
 
-//перенос животных между танками
-void Oceanarium::transfer_animal_between_tanks(const std::string& animal_id, Tank* from_tank, Tank* to_tank) {
-    if (!from_tank || !to_tank) {
-        throw OceanariumError(
-            "Ошибка перевода: Указатель на исходный или целевой танк равен nullptr.");
-    }
-    if (from_tank == to_tank) {
-        throw OceanariumError(
-            "Ошибка перевода: Исходный и целевой танк совпадают.");
-    }
-    if (std::find(tanks.begin(), tanks.end(), from_tank) == tanks.end()) {
-        throw OceanariumError(
-            "Ошибка перевода: Исходный танк не зарегистрирован в этом океанариуме.");
-    }
-    if (std::find(tanks.begin(), tanks.end(), to_tank) == tanks.end()) {
-        throw OceanariumError(
-            "Ошибка перевода: Целевой танк не зарегистрирован в этом океанариуме.");
-    }
-
-    // TODO: как только у Tank появятся методы contains_animal / remove_animal ДОБАВИТЬ CONST ANIMAL ID
-    // add_animal — здесь нужно будет проверить существование животного,
-    // вместимость и совместимость видов (TankCapacityExceededError и т.п.),
-    // а затем фактически перенести.
-
-    // Реальный перенос ещё не реализован. Нельзя рапортовать об успехе
-    // и писать в audit_log: это ввело бы в заблуждение пользователя
-    // и самого океанариум (лог «врёт»).
-    throw OceanariumError(
-        "Ошибка перевода: перенос животных между танками ещё не реализован.");
-}
-
 //регистрирует танк в океанариуме
 void Oceanarium::add_tank(Tank* tank) {
     if (!tank) {

@@ -106,10 +106,6 @@ public:
     void open_for_day();
     void close_for_day();
 
-    void transfer_animal_between_tanks(const std::string& animal_id,
-                                       Tank* from_tank,
-                                       Tank* to_tank);
-
     void add_tank(Tank* tank);
     void add_employee(Employee* employee);
 

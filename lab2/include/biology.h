@@ -2,12 +2,13 @@
 
 #include <string>
 #include <vector>
-#include <utility> // Для std::pair
+#include <utility> 
 
 // Предварительные объявления классов из других пакетов
 class Habitat;
 class Tank;
 class FeedStock; 
+class QuarantineTank; 
 
 // Предварительные объявления для классов внутри этого файла
 class Animal;
@@ -22,7 +23,6 @@ private:
 public:
     Species(std::string name = "", std::string diet = "", double min_vol = 0.0);
     
-    //могут ли жить 2 животного в одном танке (не могут, если разных один ест другого)
     bool is_compatible_with_species(const Species& other) const;
     
     std::string get_latin_name() const { return latin_name; }
@@ -34,14 +34,17 @@ private:
     Animal* animal; // non-owning
     std::string diagnosis;
     std::string treatment;
+    bool is_closed;
 
 public:
-    VetVisit(Animal* a = nullptr, std::string diag = "", std::string diag = "");
+    VetVisit(Animal* a = nullptr, std::string diag = "", std::string treat = "");
     
-//назначение нового лечения
-    void prescribe_treatment(const std::string& new_treatment, const std::string& new_diagnosis);
-    //проверяет назначено ли лечение и есть ли диагноз (диагноз или статус  вылечен), если да закрывает визит
+        void diagnostic(const std::string& new_diagnosis, QuarantineTank* quarantine_tank = nullptr);
+    void prescribe_treatment(const std::string& new_treatment, QuarantineTank* quarantine_tank = nullptr);
     void close_visit();
+    
+    std::string get_diagnosis() const { return diagnosis; }
+    std::string get_treatment() const { return treatment; }
 };
 
 class HealthRecord {
@@ -52,10 +55,10 @@ private:
 
 public:
     HealthRecord(Animal* a = nullptr, std::string status = "Healthy");
-    //вызывает метод prescribe_treatmen
-    void add_visit(VetVisit* visit);
     // меняет статус животного на поле diagnosis из VetVisit
     void mark_recovered();
+    //вызывает метод prescribe_treatmen. если животное больно, вызывает mark_recovered() 
+    void add_visit(VetVisit* visit);
 };
 
 class FeedingPlan {
@@ -66,8 +69,8 @@ private:
 
 public:
     FeedingPlan(Animal* a = nullptr, double portion = 0.0);
-    //проверяет вес животного. если изменился, изменяет portion_grams в столько раз, во сколько изменился вес животного
-    void adjust_portion();
+    // если изменился вес в record_weight_change, изменяет portion_grams в столько раз, во сколько изменился вес животного
+    void adjust_portion(double last_weight);
     //проверяет соответствипе std::vector<FeedStock*> feed_items diet_type из поля spicies этого животного
     bool check_diet_compliance() const;
     
@@ -90,10 +93,12 @@ public:
     //запрет копирования (из-за указателей на самого себя внутри)
     Animal(const Animal&) = delete;
     Animal& operator=(const Animal&) = delete;
-
-    // изменение веса животного. если изменился больше чем на 5% вызвать add_visit(VetVisit* visit) и mark_recovered() мз health record
+    
+    //TODO добавить метод добавления id животному (если id изначально = "") 
+    
+    // изменение веса животного. если изменился больше чем на 5% вызвать add_visit(VetVisit* visit) и mark_recovered() мз health record. ВЫЗОВ void adjust_portion();
     void record_weight_change(double new_weight);
-    //изменить среду обитания на другую, если в другой среде обитания прошла проверка на подходимость животному
+    //изменить среду обитания на другую в полях животного TODO ВСПОМОГАТЕЛЬНАЯ
     void move_to_habitat(Habitat* new_habitat);
     //Назначает животному новый рацион. Копирует переданный план в feeding_plan (здесь нужно не забыть обновить указатель plan.animal = this внутри реализации).
     void assign_feeding_plan(const FeedingPlan& plan);
