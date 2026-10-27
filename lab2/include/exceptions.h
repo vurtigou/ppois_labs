@@ -30,3 +30,15 @@ class EntityNotFoundError : public OceanariumError {
 public:
     explicit EntityNotFoundError(const std::string& message) : OceanariumError(message) {}
 };
+
+// Для действий, которые запрещены по правилам (например, двигать детеныша)
+class InvalidActionError : public OceanariumError {
+public:
+    explicit InvalidActionError(const std::string& message) : OceanariumError(message) {}
+};
+
+// Для попытки скрестить разных животных
+class SpeciesMismatchError : public OceanariumError {
+public:
+    explicit SpeciesMismatchError(const std::string& message) : OceanariumError(message) {}
+};

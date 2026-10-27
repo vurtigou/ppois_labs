@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <utility> 
+#include <memory>
+#include "inventory.h" //для FeedStock
 
 // Предварительные объявления классов из других пакетов
 class Habitat;
@@ -17,7 +19,7 @@ class VetVisit;
 class Species {
 private:
     std::string latin_name;
-    std::string diet_type;
+    std::string diet_type; //строка с названием еды
     double min_tank_volume;
 
 public:
@@ -50,14 +52,14 @@ public:
 class HealthRecord {
 private:
     Animal* animal; // non-owning
-    std::vector<VetVisit*> visits; // non-owning
+    std::vector<std::unique_ptr<VetVisit>> visits;
     std::string current_status;
 
 public:
     HealthRecord(Animal* a = nullptr, std::string status = "Healthy");
-    // меняет статус животного на поле diagnosis из VetVisit
-    void mark_recovered();
-    //вызывает метод prescribe_treatmen. если животное больно, вызывает mark_recovered() 
+    HealthRecord(const HealthRecord&) = delete;
+    HealthRecord& operator=(const HealthRecord&) = delete;
+    void status_diagnosis();
     void add_visit(VetVisit* visit);
 };
 
@@ -69,13 +71,12 @@ private:
 
 public:
     FeedingPlan(Animal* a = nullptr, double portion = 0.0);
-    // если изменился вес в record_weight_change, изменяет portion_grams в столько раз, во сколько изменился вес животного
     void adjust_portion(double last_weight);
-    //проверяет соответствипе std::vector<FeedStock*> feed_items diet_type из поля spicies этого животного
-    bool check_diet_compliance() const;
-    
-    //добавляет item в  std::vector<FeedStock*> feed_items
     void add_feed_item(FeedStock* item);
+    bool check_diet_compliance() const;
+    void calculate_portion();
+
+    void set_animal(Animal* a) { animal = a; }
 };
 
 class Animal {
@@ -89,25 +90,48 @@ private:
 
 public:
     Animal(std::string id = "", Species sp = Species(), double weight = 0.0);
+    
+    virtual ~Animal() = default;
 
     //запрет копирования (из-за указателей на самого себя внутри)
     Animal(const Animal&) = delete;
     Animal& operator=(const Animal&) = delete;
     
-    //TODO добавить метод добавления id животному (если id изначально = "") 
-    
-    // изменение веса животного. если изменился больше чем на 5% вызвать add_visit(VetVisit* visit) и mark_recovered() мз health record. ВЫЗОВ void adjust_portion();
-    void record_weight_change(double new_weight);
-    //изменить среду обитания на другую в полях животного TODO ВСПОМОГАТЕЛЬНАЯ
-    void move_to_habitat(Habitat* new_habitat);
-    //Назначает животному новый рацион. Копирует переданный план в feeding_plan (здесь нужно не забыть обновить указатель plan.animal = this внутри реализации).
+    void set_id(const std::string& new_id); 
+    virtual void record_weight_change(double new_weight);
+    //TODO ВСПОМОГАТЕЛЬНАЯ
+    virtual void move_to_habitat(Habitat* new_habitat);
     void assign_feeding_plan(const FeedingPlan& plan);
+    
+    virtual bool can_breed() const { return true; } // Обычные животные могут размножаться
+    virtual void on_vet_visit() {}                  // Реакция на визит (для Cub - увеличение возраста)
 
-    // Геттеры
     std::string get_id() const { return animal_id; }
     double get_weight() const { return weight_kg; }
     Habitat* get_habitat() const { return habitat; }
-    const Species& get_species() const { return species; } // для проверки совместимости
+    const Species& get_species() const { return species; }
+    HealthRecord& get_health_record() { return health_record; }
+};
+
+class Cub : public Animal {
+private:
+    int age;
+
+public:
+    // Конструктор принимает ID родителя, чтобы сгенерировать свой ID
+    Cub(const std::string& parent_id, Species sp = Species(), double weight = 0.0);
+
+    // Переопределяем методы родителя
+    void record_weight_change(double new_weight) override;
+    void move_to_habitat(Habitat* new_habitat) override;
+    
+    // Детеныши не могут спариваться
+    bool can_breed() const override { return false; }
+    
+    // При каждом визите к врачу возраст увеличивается
+    void on_vet_visit() override { age++; }
+    
+    int get_age() const { return age; }
 };
 
 class BreedingProgram {
@@ -118,9 +142,8 @@ private:
 
 public:
     BreedingProgram(Species sp = Species(), std::string status = "Inactive");
-    //Формирует пару из двух животных для размножения. Добавляет их в вектор pairs.
+    
     void select_pair(Animal* parent1, Animal* parent2);
-    //Назначает дату/время и запускает процесс размножения (меняет статус программы на "Active. Data: ...")
     void schedule_breeding(const std::string& data);
 };
 
