@@ -21,6 +21,10 @@ void VetVisit::diagnostic(const std::string& new_diagnosis, QuarantineTank* quar
     diagnosis = new_diagnosis;
 
     if (new_diagnosis != "Healthy" && new_diagnosis != "Cured") {
+        if (quarantine_tank != nullptr) {
+            quarantine_tank->set_diagnosis(new_diagnosis);
+        }
+        
         prescribe_treatment("Prescribed based on diagnosis: " + new_diagnosis, quarantine_tank);
     } else {
         treatment = ""; 
@@ -169,12 +173,14 @@ void Animal::set_id(const std::string& new_id) {
 }
 
 void Animal::move_to_habitat(Habitat* new_habitat) {
-    if (new_habitat != nullptr) {
-        habitat = new_habitat;
-        std::cout << "Animal " << animal_id << " moved to a new habitat." << std::endl;
-    } else {
-        throw NullPointerError("Animal: Cannot move to a null habitat.");
+    // Если передали nullptr, значит животное просто покинуло среду обитания
+    if (new_habitat == nullptr) {
+        habitat = nullptr;
+        std::cout << "Animal " << animal_id << " has left its habitat." << std::endl;
+        return;
     }
+    habitat = new_habitat;
+    std::cout << "Animal " << animal_id << " moved to a new habitat." << std::endl;
 }
 
 void Animal::assign_feeding_plan(const FeedingPlan& plan) {
@@ -183,9 +189,8 @@ void Animal::assign_feeding_plan(const FeedingPlan& plan) {
 }
 
 void Animal::record_weight_change(double new_weight) {
-    if (new_weight < 0) {
-        throw OceanariumError("Animal: Weight cannot be negative.");
-    }
+    if (new_weight < 0) throw OceanariumError("Animal: Weight cannot be negative.");
+    
     double old_weight = weight_kg;
     weight_kg = new_weight;
     
@@ -196,13 +201,16 @@ void Animal::record_weight_change(double new_weight) {
             std::cout << "WARNING: Weight changed by " << change_percent << "%. Creating vet visit..." << std::endl;
 
             VetVisit* visit = new VetVisit(this);
-
-            visit->diagnostic("Abnormal weight change", nullptr);
-            visit->close_visit();
+            try {
+                visit->diagnostic("Abnormal weight change", nullptr);
+                visit->close_visit();
+            } catch (...) {
+                delete visit; // Защита от утечки памяти
+                throw;
+            }
             health_record.status_diagnosis(); 
         }
     }
-
     feeding_plan.adjust_portion(old_weight);
 }
 
@@ -212,17 +220,20 @@ Cub::Cub(const std::string& parent_id, Species sp, double weight)
 
 void Cub::record_weight_change(double new_weight) {
     double old_weight = get_weight();
-
     Animal::record_weight_change(new_weight); 
 
-    // Если вес изменился, но меньше чем на 5% (и базовый метод не создал визит)
     if (old_weight > 0 && new_weight != old_weight) {
         double change_percent = (std::abs(new_weight - old_weight) / old_weight) * 100.0;
         if (change_percent <= 5.0) {
             std::cout << "Cub weight changed slightly. Creating mandatory vet visit..." << std::endl;
             VetVisit* visit = new VetVisit(this);
-            visit->diagnostic("Routine cub weight check", nullptr);
-            visit->close_visit(); // Это вызовет on_vet_visit() и увеличит возраст
+            try {
+                visit->diagnostic("Routine cub weight check", nullptr);
+                visit->close_visit(); 
+            } catch (...) {
+                delete visit; // Защита от утечки памяти
+                throw;
+            }
         }
     }
 }
@@ -256,4 +267,42 @@ void BreedingProgram::select_pair(Animal* parent1, Animal* parent2) {
 void BreedingProgram::schedule_breeding(const std::string& data) {
     status = "Active. Date: " + data;
     std::cout << "Breeding scheduled for: " << data << std::endl;
+}
+
+AnimalTransfer::AnimalTransfer(Animal* a, Habitat* dest) 
+    : animal(a), destination_habitat(dest) {}
+
+void AnimalTransfer::approve_transfer() {
+    if (!animal || !destination_habitat) {
+        throw NullPointerError("AnimalTransfer: Animal or destination habitat is null.");
+    }
+
+    Habitat* old_habitat = animal->get_habitat();
+    if (!old_habitat) {
+        throw OceanariumError("AnimalTransfer: Animal has no current habitat.");
+    }
+
+    if (old_habitat == destination_habitat) {
+        throw InvalidActionError("AnimalTransfer: Animal is already in this habitat.");
+    }
+
+    if (!destination_habitat->check_suitability_for_animal(*animal)) {
+        throw UnsuitableHabitatError("AnimalTransfer: Destination habitat is not suitable for animal " + animal->get_id());
+    }
+
+    Animal* removed = old_habitat->remove_animal(animal->get_id());
+    if (!removed) {
+        throw EntityNotFoundError("AnimalTransfer: Animal not found in its current habitat.");
+    }
+    // Используем try-catch на случай, если вдруг в новом танке не окажется места
+    try {
+        destination_habitat->add_animal(animal);
+    } catch (...) {
+        // Откат изменений: если добавить не удалось, возвращаем животное обратно в старую среду
+        old_habitat->add_animal(animal);
+        throw; 
+    }
+
+    std::cout << "Transfer approved. Animal " << animal->get_id() 
+              << " successfully moved to new habitat." << std::endl;
 }

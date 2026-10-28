@@ -41,7 +41,7 @@ private:
 public:
     VetVisit(Animal* a = nullptr, std::string diag = "", std::string treat = "");
     
-        void diagnostic(const std::string& new_diagnosis, QuarantineTank* quarantine_tank = nullptr);
+    void diagnostic(const std::string& new_diagnosis, QuarantineTank* quarantine_tank = nullptr);
     void prescribe_treatment(const std::string& new_treatment, QuarantineTank* quarantine_tank = nullptr);
     void close_visit();
     
@@ -99,7 +99,6 @@ public:
     
     void set_id(const std::string& new_id); 
     virtual void record_weight_change(double new_weight);
-    //TODO ВСПОМОГАТЕЛЬНАЯ
     virtual void move_to_habitat(Habitat* new_habitat);
     void assign_feeding_plan(const FeedingPlan& plan);
     
@@ -151,11 +150,10 @@ public:
 class AnimalTransfer {
 private:
     Animal* animal; // non-owning
-    Tank* destination_tank; // non-owning
+    Habitat* destination_habitat; // non-owning
 
 public:
     //Создает заявку. Запоминает, кого переводят и куда 
-    AnimalTransfer(Animal* a = nullptr, Tank* dest = nullptr);
-    //Удалить животное из старого танка (animal->get_habitat()->remove_animal(...)). Добавить в новый (destination_tank->add_animal(...)). Обновить указатель внутри животного
+    AnimalTransfer(Animal* a = nullptr, Habitat* dest = nullptr);
     void approve_transfer();
 };
