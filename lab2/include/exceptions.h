@@ -42,3 +42,18 @@ class SpeciesMismatchError : public OceanariumError {
 public:
     explicit SpeciesMismatchError(const std::string& message) : OceanariumError(message) {}
 };
+
+class EmployeePermissionDeniedError : public OceanariumError {
+public:
+    explicit EmployeePermissionDeniedError(const std::string& message) : OceanariumError(message) {}
+};
+
+class WaterQualityViolationError : public OceanariumError {
+public:
+    explicit WaterQualityViolationError(const std::string& message) : OceanariumError(message) {}
+};
+
+class InvalidDateError : public OceanariumError {
+public:
+    explicit InvalidDateError(const std::string& message) : OceanariumError(message) {}
+};
