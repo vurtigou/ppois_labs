@@ -21,14 +21,26 @@ private:
     std::string latin_name;
     std::string diet_type; //строка с названием еды
     double min_tank_volume;
+    std::pair<double, double> ph_range;
+    std::pair<double, double> salinity_range;
+    std::pair<double, double> temperature_range;
+    std::pair<double, double> oxygen_range;
 
 public:
-    Species(std::string name = "", std::string diet = "", double min_vol = 0.0);
+    Species(std::string name = "", std::string diet = "", double min_vol = 0.0,
+            std::pair<double, double> ph = {6.5, 8.5},
+            std::pair<double, double> salinity = {0.0, 35.0},
+            std::pair<double, double> temp = {15.0, 25.0},
+            std::pair<double, double> oxygen = {5.0, 10.0});
     
     bool is_compatible_with_species(const Species& other) const;
     
     std::string get_latin_name() const { return latin_name; }
     std::string get_diet_type() const { return diet_type; } 
+    std::pair<double, double> get_ph_range() const { return ph_range; }
+    std::pair<double, double> get_salinity_range() const { return salinity_range; }
+    std::pair<double, double> get_temperature_range() const { return temperature_range; }
+    std::pair<double, double> get_oxygen_range() const { return oxygen_range; }
 };
 
 class VetVisit {
@@ -60,7 +72,7 @@ public:
     HealthRecord(const HealthRecord&) = delete;
     HealthRecord& operator=(const HealthRecord&) = delete;
     void status_diagnosis();
-    void add_visit(VetVisit* visit);
+    void add_visit(std::unique_ptr<VetVisit> visit);
 };
 
 class FeedingPlan {
@@ -84,6 +96,7 @@ private:
     std::string animal_id;
     Species species;                    // Ассоциация 15 (композиция)
     Habitat* habitat;                   // Ассоциация 16 (агрегация, non-owning)
+    Tank* current_tank;
     HealthRecord health_record;         // Ассоциация 17 (композиция)
     FeedingPlan feeding_plan;           // Ассоциация 18 (композиция)
     double weight_kg;
@@ -92,12 +105,15 @@ public:
     Animal(std::string id = "", Species sp = Species(), double weight = 0.0);
     
     virtual ~Animal() = default;
+    virtual bool can_be_moved_to_habitat() const { return true; }
 
     //запрет копирования (из-за указателей на самого себя внутри)
     Animal(const Animal&) = delete;
     Animal& operator=(const Animal&) = delete;
     
     void set_id(const std::string& new_id); 
+    Tank* get_current_tank() const { return current_tank; }
+    void set_current_tank(Tank* tank) { current_tank = tank; }
     virtual void record_weight_change(double new_weight);
     virtual void move_to_habitat(Habitat* new_habitat);
     void assign_feeding_plan(const FeedingPlan& plan);
@@ -123,6 +139,7 @@ public:
     // Переопределяем методы родителя
     void record_weight_change(double new_weight) override;
     void move_to_habitat(Habitat* new_habitat) override;
+    bool can_be_moved_to_habitat() const override { return false; }
     
     // Детеныши не могут спариваться
     bool can_breed() const override { return false; }

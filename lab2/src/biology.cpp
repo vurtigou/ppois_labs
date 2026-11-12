@@ -6,7 +6,12 @@
 #include "habitats.h"
 #include "exceptions.h"
 
-Species::Species(std::string name, std::string diet, double min_vol) : latin_name(name), diet_type(diet), min_tank_volume(min_vol) {}
+Species::Species(std::string name, std::string diet, double min_vol,
+                 std::pair<double, double> ph, std::pair<double, double> salinity,
+                 std::pair<double, double> temp, std::pair<double, double> oxygen) 
+    : latin_name(name), diet_type(diet), min_tank_volume(min_vol),
+      ph_range(ph), salinity_range(salinity), 
+      temperature_range(temp), oxygen_range(oxygen) {}
 
 bool Species::is_compatible_with_species(const Species& other) const {
     bool this_eats_other = (other.diet_type.find(this->latin_name) != std::string::npos);
@@ -41,16 +46,13 @@ void VetVisit::prescribe_treatment(const std::string& new_treatment, QuarantineT
 
 void VetVisit::close_visit() {
     if (is_closed) {
-	throw InvalidActionError("VetVisit: Visit is already closed.");
+        throw InvalidActionError("VetVisit: Visit is already closed.");
     }
+    
     if (diagnosis == "Healthy" || diagnosis == "Cured") {
         is_closed = true;
         std::cout << "Vet visit successfully closed (animal is healthy)." << std::endl;
-        
-        if (animal) {
-            animal->get_health_record().add_visit(this);
-        }
-        return;
+        return; 
     }
 
     bool has_treatment = !treatment.empty();
@@ -60,10 +62,6 @@ void VetVisit::close_visit() {
         is_closed = true;
         std::cout << "Vet visit successfully closed. Diagnosis: " << diagnosis 
                   << " | Treatment: " << treatment << std::endl;
-                  
-        if (animal) {
-            animal->get_health_record().add_visit(this);
-        }
     } else {
         throw OceanariumError("VetVisit: Cannot close visit. Treatment or diagnosis is missing.");
     }
@@ -72,12 +70,11 @@ void VetVisit::close_visit() {
 HealthRecord::HealthRecord(Animal* a, std::string status) 
     : animal(a), current_status(status) {}
     
-void HealthRecord::add_visit(VetVisit* visit) {
+void HealthRecord::add_visit(std::unique_ptr<VetVisit> visit) {
     if (!visit) {
         throw NullPointerError("HealthRecord: Cannot add a null visit.");
     }
-    visits.push_back(std::unique_ptr<VetVisit>(visit));
-
+    visits.push_back(std::move(visit)); // Передаем владение
     if (animal) {
         animal->on_vet_visit(); 
     }
@@ -161,6 +158,7 @@ void FeedingPlan::calculate_portion() {
 
 Animal::Animal(std::string id, Species sp, double weight) 
     : animal_id(id), species(sp), habitat(nullptr), 
+      current_tank(nullptr),
       health_record(this), feeding_plan(this), weight_kg(weight) {}
 
 void Animal::set_id(const std::string& new_id) {
@@ -194,24 +192,21 @@ void Animal::record_weight_change(double new_weight) {
     double old_weight = weight_kg;
     weight_kg = new_weight;
     
-    if (old_weight > 0.0) { 
+    if (old_weight > 0.0) {
         double change_percent = (std::abs(new_weight - old_weight) / old_weight) * 100.0;
 
         if (change_percent > 5.0) {
             std::cout << "WARNING: Weight changed by " << change_percent << "%. Creating vet visit..." << std::endl;
-
-            VetVisit* visit = new VetVisit(this);
-            try {
-                visit->diagnostic("Abnormal weight change", nullptr);
-                visit->close_visit();
-            } catch (...) {
-                delete visit; // Защита от утечки памяти
-                throw;
-            }
+            auto visit = std::make_unique<VetVisit>(this);
+            visit->diagnostic("Abnormal weight change", nullptr);
+            visit->close_visit();
+           
+            health_record.add_visit(std::move(visit));
             health_record.status_diagnosis(); 
         }
+        
+        feeding_plan.adjust_portion(old_weight);
     }
-    feeding_plan.adjust_portion(old_weight);
 }
 
 Cub::Cub(const std::string& parent_id, Species sp, double weight)
@@ -226,20 +221,20 @@ void Cub::record_weight_change(double new_weight) {
         double change_percent = (std::abs(new_weight - old_weight) / old_weight) * 100.0;
         if (change_percent <= 5.0) {
             std::cout << "Cub weight changed slightly. Creating mandatory vet visit..." << std::endl;
-            VetVisit* visit = new VetVisit(this);
-            try {
-                visit->diagnostic("Routine cub weight check", nullptr);
-                visit->close_visit(); 
-            } catch (...) {
-                delete visit; // Защита от утечки памяти
-                throw;
-            }
+            auto visit = std::make_unique<VetVisit>(this);
+            visit->diagnostic("Routine cub weight check", nullptr);
+            visit->close_visit(); 
+            health_record.add_visit(std::move(visit));
         }
     }
 }
 
 void Cub::move_to_habitat(Habitat* new_habitat) {
-    throw InvalidActionError("Cub: Cannot be moved to another habitat! It must stay with its parents.");
+    if (new_habitat != nullptr) {
+        throw InvalidActionError("Cub: Cannot be moved to another habitat! It must stay with its parents.");
+    }
+    // Покидание среды разрешено (для очистки / удаления)
+    Animal::move_to_habitat(new_habitat);
 }
 
 BreedingProgram::BreedingProgram(Species sp, std::string status) 
@@ -275,6 +270,10 @@ AnimalTransfer::AnimalTransfer(Animal* a, Habitat* dest)
 void AnimalTransfer::approve_transfer() {
     if (!animal || !destination_habitat) {
         throw NullPointerError("AnimalTransfer: Animal or destination habitat is null.");
+    }
+    
+    if (!animal->can_be_moved_to_habitat()) {
+        throw InvalidActionError("AnimalTransfer: Animal " + animal->get_id() + " cannot be moved to another habitat.");
     }
 
     Habitat* old_habitat = animal->get_habitat();

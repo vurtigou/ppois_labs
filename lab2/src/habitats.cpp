@@ -8,8 +8,25 @@ Habitat::Habitat(std::string type, double volume, const WaterQuality& water)
     : habitat_type(type), volume_liters(volume), water_quality(water) {}
 
 bool Habitat::check_suitability_for_animal(const Animal& animal) const {
-    //TODO: добавить проверку воды и объема для животного
-    return true; 
+        // 1. Получаем нормы для вида этого животного
+    std::pair<double, double> ph_norm = animal.get_species().get_ph_range();
+    std::pair<double, double> sal_norm = animal.get_species().get_salinity_range();
+    std::pair<double, double> temp_norm = animal.get_species().get_temperature_range();
+    std::pair<double, double> oxy_norm = animal.get_species().get_oxygen_range();
+
+    // 2. Получаем текущие показатели воды в этой среде обитания
+    double current_ph = water_quality.get_ph();
+    double current_sal = water_quality.get_salinity();
+    double current_temp = water_quality.get_temperature();
+    double current_oxy = water_quality.get_oxygen_level();
+
+    // 3. Проверяем каждый показатель (входит ли текущее значение в интервал [min, max])
+    bool ph_ok = (current_ph >= ph_norm.first && current_ph <= ph_norm.second);
+    bool sal_ok = (current_sal >= sal_norm.first && current_sal <= sal_norm.second);
+    bool temp_ok = (current_temp >= temp_norm.first && current_temp <= temp_norm.second);
+    bool oxy_ok = (current_oxy >= oxy_norm.first && current_oxy <= oxy_norm.second);
+
+    return ph_ok && sal_ok && temp_ok && oxy_ok;
 }
 
 double Habitat::calculate_biomass() const {
@@ -26,26 +43,42 @@ double Habitat::calculate_biomass() const {
     }
     return total_biomass;
 }
+
 Animal* Habitat::add_animal(Animal* animal) {
-    if (!animal) {
+    if (!animal)
         throw NullPointerError("Habitat: Cannot add null animal.");
+        
+    if (!animal->can_be_moved_to_habitat()) {
+        throw InvalidActionError("Habitat: Animal " + animal->get_id()
+                                 + " cannot be moved to a habitat.");
     }
+
+    if (contains_animal(animal->get_id()))
+        throw DuplicateEntityError("Habitat: Animal " + animal->get_id() + " already in this habitat.");
 
     Tank* target_tank = nullptr;
     for (auto* tank : tanks) {
-        if (tank != nullptr && tank->get_animal_count() < 10) {
-            target_tank = tank;
-            break; 
-        }
+        if (tank && tank->get_animal_count() < 10) { target_tank = tank; break; }
     }
-
-    if (target_tank == nullptr) {
+    if (!target_tank) {
+        if (tanks.empty()) throw OceanariumError("Habitat: No tanks available.");
         throw OceanariumError("Habitat: All tanks are full (max 10 animals per tank).");
     }
-    animal->move_to_habitat(this);
-    target_tank->add_animal(animal);
 
-    std::cout << "Animal " << animal->get_id() << " added to tank " 
+    Habitat* prev_habitat = animal->get_habitat();
+    Tank* prev_tank = animal->get_current_tank();
+
+    if (prev_habitat != nullptr && prev_habitat != this) {
+        prev_habitat->remove_animal(animal->get_id());
+    } else if (prev_habitat == nullptr && prev_tank != nullptr) {
+        // Животное было в карантине (или просто в отсоединенном танке)
+        prev_tank->remove_animal(animal->get_id());
+    }
+
+    target_tank->add_animal(animal);
+    animal->move_to_habitat(this);
+
+    std::cout << "Animal " << animal->get_id() << " added to tank "
               << target_tank->get_tank_id() << " in habitat." << std::endl;
     return animal;
 }
@@ -63,22 +96,24 @@ bool Habitat::contains_animal(const std::string& animal_id) const {
 
 Animal* Habitat::remove_animal(const std::string& animal_id) {
     for (auto* tank : tanks) {
-        if (tank != nullptr && tank->contains_animal(animal_id)) {
-            Animal* target = nullptr; 
-            for (auto* a : tank->get_animals()) {
-                if (a->get_id() == animal_id) { 
-                    target = a; 
-                    break; 
-                }
-            }
-            
-            if (target != nullptr) {
-                target->move_to_habitat(nullptr);
-                return tank->remove_animal(animal_id);
-            }
+        if (tank && tank->contains_animal(animal_id)) {
+            Animal* removed = tank->remove_animal(animal_id);   // сначала убрать из танка
+            if (removed) removed->move_to_habitat(nullptr);      // потом обнулить среду
+            return removed;
         }
     }
-    return nullptr; 
+    return nullptr;
+}
+
+void Habitat::add_tank(Tank* tank) {
+    if (!tank)
+        throw NullPointerError("Habitat: Cannot add null tank.");
+    if (tank->get_habitat() != this)
+        throw OceanariumError("Habitat: Tank " + tank->get_tank_id()
+                              + " belongs to a different habitat.");
+    if (std::find(tanks.begin(), tanks.end(), tank) != tanks.end())
+        return;
+    tanks.push_back(tank);
 }
 
 Exhibit::Exhibit(std::string title, std::string description, bool is_open) : title(title), description(description), is_open(is_open) {}
@@ -110,21 +145,28 @@ std::vector<Animal*> Exhibit::get_all_animals() const {
 
 void Exhibit::add_tank(Tank* tank) {
     if (!tank) throw NullPointerError("Exhibit: Cannot add null tank.");
-    // Проверка на дубликат
     if (std::find(tanks.begin(), tanks.end(), tank) != tanks.end()) return;
-    
+
+    // отвязать от прежнего зала, иначе получим «двойное членство»
+    Exhibit* prev = tank->get_exhibit();
+    if (prev && prev != this) {
+        prev->remove_tank(tank);
+    }
+
     tanks.push_back(tank);
-    tank->set_exhibit(this); // Привязываем танк к залу
+    tank->set_exhibit(this);
 }
 
 bool Exhibit::remove_tank(Tank* tank) {
     auto it = std::find(tanks.begin(), tanks.end(), tank);
-    if (it != tanks.end()) {
-        tanks.erase(it);
-        tank->set_exhibit(nullptr); // Отвязываем танк от зала
-        return true;
+    if (it == tanks.end()) return false;
+
+    tanks.erase(it);
+    // обнуляем привязку только если она всё ещё указывает на нас
+    if (tank->get_exhibit() == this) {
+        tank->set_exhibit(nullptr);
     }
-    return false;
+    return true;
 }
 
 Tank::Tank(std::string id, Habitat* parent, std::string filtration) 
@@ -132,32 +174,48 @@ Tank::Tank(std::string id, Habitat* parent, std::string filtration)
       exhibit(nullptr), animal_count(0), is_filtration_on(false) {}
 
 void Tank::start_filtration() {
-    if (filtration_system.empty()) {
+    if (filtration_system.empty())
         throw OceanariumError("Tank " + tank_id + ": No filtration system installed!");
-    }
     if (is_filtration_on) {
         std::cout << "Filtration is already running in tank " << tank_id << std::endl;
         return;
     }
+    if (parent_habitat == nullptr)
+        throw OceanariumError("Tank " + tank_id + ": No parent habitat.");
 
     is_filtration_on = true;
-    std::cout << "Filtration system started for tank: " << tank_id << std::endl;
-    if (parent_habitat != nullptr) {
-        // TODO: Для этого в Habitat нужно добавить метод improve_water_quality()
-        // parent_habitat->improve_water_quality(15.0); // например, +15% к чистоте
-        std::cout << "Water quality in habitat improved. Filtration system ended." << std::endl;
+    try {
+        std::cout << "Filtration system started for tank: " << tank_id << std::endl;
+
+        for (ControlSystem* system : sensors) {
+            if (!system) continue;
+
+            system->checking();
+            if (!system->get_is_good_working()) {
+                std::cout << "  Warning: control system " << system->get_id()
+                          << " is broken, skipped." << std::endl;
+                continue;
+            }
+            system->improving();
+        }
+
+        if (parent_habitat->get_water_quality().is_within_norm())
+            std::cout << "Water quality in habitat is now within norm." << std::endl;
+        else
+            std::cout << "Water quality is still out of norm "
+                         "(some systems broken or out of resources)." << std::endl;
+    } catch (...) {
+        // Гарантируем сброс флага, даже если датчик бросил исключение.
+        is_filtration_on = false;
+        throw;
     }
     is_filtration_on = false;
 }
 
+
 bool Tank::is_water_critical() const {
     if (parent_habitat == nullptr) return false;
-    
-    // TODO: Здесь нужно проверить параметры воды (кислород, температура, pH).
-    // Например: return parent_habitat->get_water_quality().get_oxygen() < 2.0;
-    
-    // Пока заглушка для демонстрации логики
-    return true; // Допустим, вода критическая
+    return !parent_habitat->get_water_quality().is_within_norm();
 }
 
 void Tank::evacuate_all_animals(Habitat* backup_habitat) {
@@ -178,27 +236,48 @@ void Tank::evacuate_all_animals(Habitat* backup_habitat) {
 }
 
 void Tank::emergency_drain(Habitat* backup_habitat) {
-    if (!backup_habitat) {
+    if (!backup_habitat)
         throw NullPointerError("EmergencyDrain: Backup habitat is null.");
-    }
+
     std::cout << "Checking water quality for tank " << tank_id << "..." << std::endl;
     if (!is_water_critical()) {
         std::cout << "Water is fine. No emergency drain needed." << std::endl;
         return;
     }
+
     std::cout << "CRITICAL WATER QUALITY! Starting emergency evacuation..." << std::endl;
     evacuate_all_animals(backup_habitat);
     if (animal_count > 0) {
-        throw OceanariumError("EmergencyDrain: Could not evacuate all animals. Drain aborted.");
+        // Часть животных могла уже уехать в backup; танк остаётся как есть,
+        // но не сливаем воду — иначе оставшиеся животные погибнут.
+        throw OceanariumError(
+            "EmergencyDrain: Could not evacuate all animals. Drain aborted. "
+            "Some animals may already have been moved to backup habitat.");
     }
 
-    // TODO Сливаем воду (или обнуляем ее)
-    // parent_habitat->set_water_quality(WaterQuality(0, 0, 0));
+    WaterQuality& wq = parent_habitat->get_water_quality();
+    wq.set_ph(0.0);
+    wq.set_salinity(0.0);
+    wq.set_temperature(0.0);
+    wq.set_oxygen_level(0.0);
+
     std::cout << "WARNING! Tank " << tank_id << " has been drained." << std::endl;
-    start_filtration();
+
+    // start_filtration может бросить (например, фильтр не установлен) —
+    // танк уже осушен и без животных, не даём исключению «потеряться».
+    try {
+        start_filtration();
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: filtration could not be restarted after drain: "
+                  << e.what() << std::endl;
+    }
 }
 
+
 void Tank::clear_state() {
+    for (Animal* a : animals) {
+        if (a) a->set_current_tank(nullptr);
+    }
     animals.clear();       // Удаляем всех животных из вектора
     animal_count = 0;      // Сбрасываем счетчик
     sensors.clear();       // Удаляем датчики
@@ -221,9 +300,13 @@ bool Tank::contains_animal(const std::string& animal_id) const {
 
 void Tank::add_animal(Animal* animal) {
     if (!animal) return;
-    if (contains_animal(animal->get_id())) return;
-    
-    animals.push_back(animal); 
+    if (contains_animal(animal->get_id())) return;   // дубликат — молча игнор
+    if (animal_count >= 10)
+        throw OceanariumError(
+            "Tank " + tank_id + ": capacity exceeded (max 10 animals).");
+
+    animals.push_back(animal);
+    animal->set_current_tank(this);
     animal_count++;
 }
 
@@ -232,6 +315,7 @@ Animal* Tank::remove_animal(const std::string& animal_id) {
         if ((*it)->get_id() == animal_id) {
             Animal* removed = *it;
             animals.erase(it);
+            removed->set_current_tank(nullptr);
             animal_count--;
             return removed;
         }
@@ -314,27 +398,30 @@ void Zone::add_tank(Tank* tank) {
 void Zone::remove_tank(Tank* tank, Habitat* backup_habitat) {
     if (!tank) return;
 
-    bool found = false;
+    Exhibit* owner = tank->get_exhibit();
+    if (!owner) return;
+
+    // принадлежит ли этот exhibit нашей зоне?
+    bool in_this_zone = false;
     for (Exhibit* ex : exhibits) {
-        if (ex && ex->remove_tank(tank)) {
-            found = true;
-            break;
-        }
+        if (ex == owner) { in_this_zone = true; break; }
     }
+    if (!in_this_zone) return;
 
-    if (!found) return;
-    
+    // 1) сначала эвакуация — иначе танк может «осиротеть» с животными
     evacuate_tank_animals(tank, backup_habitat);
-    
-    //проверка на детеныша (его нельзя эвакуировать)
+
     if (tank->get_animal_count() > 0) {
-        std::cerr << "WARNING: Tank " << tank->get_tank_id() 
-                  << " still has animals! Cannot clear state safely." << std::endl;
-        return; 
+        std::cerr << "WARNING: Tank " << tank->get_tank_id()
+                  << " still has animals! Cannot remove safely." << std::endl;
+        return;   // танк остаётся в зале, состояние не тронуто
     }
 
+    // 2) только теперь физически убираем
+    owner->remove_tank(tank);
     tank->clear_state();
-    std::cout << "Tank " << tank->get_tank_id() << " successfully removed from zone." << std::endl;
+    std::cout << "Tank " << tank->get_tank_id()
+              << " successfully removed from zone." << std::endl;
 }
 
 void Zone::add_exhibit(Exhibit* exhibit) {
@@ -355,17 +442,29 @@ void QuarantineTank::set_diagnosis(const std::string& diagnosis) {
 }
 
 void QuarantineTank::admit_animal(Animal* animal) {
-    if (!animal) {
+    if (!animal)
         throw NullPointerError("QuarantineTank: Animal pointer cannot be null.");
+    if (contains_animal(animal->get_id())) return; 
+    
+    if (!animal->can_be_moved_to_habitat()) {
+        throw InvalidActionError("QuarantineTank: Animal " + animal->get_id() + " cannot be moved to quarantine.");
     }
+    if (get_animal_count() >= 10)
+        throw OceanariumError("QuarantineTank: capacity exceeded (max 10).");
     Habitat* current_habitat = animal->get_habitat();
+    Tank* current_tank = animal->get_current_tank();
+
     if (current_habitat != nullptr) {
         current_habitat->remove_animal(animal->get_id());
+    } else if (current_tank != nullptr) {
+        // Это решает проблему, если животное пытаются засунуть во ВТОРОЙ карантин
+        current_tank->remove_animal(animal->get_id());
     }
-    add_animal(animal);
-    animal->move_to_habitat(nullptr);
 
-    std::cout << "Animal " << animal->get_id() 
+    add_animal(animal);                 
+    animal->move_to_habitat(nullptr); // Обнуляем среду на всякий случай
+
+    std::cout << "Animal " << animal->get_id()
               << " admitted to quarantine. Reason: " << quarantine_reason << std::endl;
 }
 
@@ -375,9 +474,6 @@ Animal* QuarantineTank::release_after_check(const std::string& animal_id) {
         throw EntityNotFoundError(
             "QuarantineTank: Animal " + animal_id + " not found in quarantine tank.");
     }
-    // Пусть вызывающий код сам решит, куда посадить животное:
-    //   Animal* a = qtank.release_after_check("A-1");
-    //   some_habitat->add_animal(a);  // <- вот здесь habitat установится
     
     std::cout << "Quarantine check passed. Animal " << animal_id 
               << " released from tank " << get_tank_id() << std::endl;
@@ -409,7 +505,7 @@ Tank* HabitatMap::locate_tank(const std::string& tank_id) const {
             if (!exhibit) continue;
             
             // 3. Проходим по всем танкам в зале
-            for (const auto* tank : exhibit->get_tanks()) {
+            for (auto* tank : exhibit->get_tanks()) {
                 if (tank && tank->get_tank_id() == tank_id) {
                     // Выводим всю информацию
                     std::cout << "========================================" << std::endl;
@@ -436,7 +532,7 @@ Tank* HabitatMap::locate_tank(const std::string& tank_id) const {
                     }
                     std::cout << "\n========================================" << std::endl;
                     
-                    return const_cast<Tank*>(tank); 
+                    return tank; 
                 }
             }
         }

@@ -29,10 +29,11 @@ public:
     //проверка есть ли животное с такими id
     bool contains_animal(const std::string& animal_id) const;
     Animal* remove_animal(const std::string& animal_id);
-    void add_tank(Tank* tank) { if(tank) tanks.push_back(tank); }
-    
+    void add_tank(Tank* tank);
+
     // Геттеры
     const WaterQuality& get_water_quality() const { return water_quality; }
+    WaterQuality&       get_water_quality()       { return water_quality; }
     std::string get_habitat_type() const { return habitat_type; }
 };
 
@@ -66,7 +67,7 @@ private:
     std::string tank_id;
     Habitat* parent_habitat;
     std::string filtration_system;
-    std::vector<std::string> sensors;
+    std::vector<ControlSystem*> sensors;
     std::vector<Animal*> animals;
     Exhibit* exhibit;
     int animal_count;
@@ -94,6 +95,7 @@ public:
     int get_animal_count() const { return animal_count; }
 
     void add_animal(Animal* animal);
+    void add_sensor(ControlSystem* s) { if (s) sensors.push_back(s); }
     bool contains_animal(const std::string& animal_id) const;
     Animal* remove_animal(const std::string& animal_id);
 };
