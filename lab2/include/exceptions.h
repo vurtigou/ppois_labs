@@ -57,3 +57,8 @@ class InvalidDateError : public OceanariumError {
 public:
     explicit InvalidDateError(const std::string& message) : OceanariumError(message) {}
 };
+
+class StaffManagementError : public OceanariumError {
+public:
+    explicit StaffManagementError(const std::string& message) : OceanariumError(message) {}
+};
