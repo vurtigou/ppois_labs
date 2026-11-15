@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'lab2/**' # ВАЖНО: замени lab2 на название папки, где лежит эта лаба
+      - 'lab2/**' 
       - '.github/workflows/lab2_ci.yml'
   pull_request:
     branches: [ "main" ]
@@ -17,7 +17,6 @@ jobs:
     
     defaults:
       run:
-        # Укажи путь к папке с новой лабой
         working-directory: ./lab2 
 
     steps:
@@ -33,7 +32,6 @@ jobs:
       run: make test
 
     - name: Check Code Coverage (>90%)
-      # Твой Makefile (make coverage) вызовет check_coverage.py
       run: make coverage
 
     - name: Run Static Analysis (Linter)
