@@ -1,39 +1,69 @@
-name: Lab 2 CI (Oceanarium)
+name: Lab 2 CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
-    paths:
-      - 'lab2/**' 
-      - '.github/workflows/lab2_ci.yml'
+    branches: [ "main", "feature/*" ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ "main" ]
-    paths:
-      - 'lab2/**'
 
 jobs:
-  build-and-test:
+  test-and-analyze:
     runs-on: ubuntu-latest
-    
     defaults:
       run:
-        working-directory: ./lab2 
+        working-directory: ./lab2
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y g++ make gcov python3 cppcheck
+      run: sudo apt-get update && sudo apt-get install -y g++ make gcov python3 cppcheck
 
     - name: Build and Run Tests
-      # Это вызовет твой Makefile (make test)
+      # Собирает проект и запускает юнит-тесты + CLI-тесты
       run: make test
 
     - name: Check Code Coverage (>90%)
-      run: make coverage
+      # скрипт внутри make coverage сам проверяет порог 90%, если покрытие меньше, скрипт завершится с ошибкой, и пайплайн упадет
+      run: |
+        echo "Запуск проверки покрытия..."
+        make coverage
+        echo "Проверка покрытия успешно пройдена!"
 
     - name: Run Static Analysis (Linter)
       run: |
         cppcheck --enable=warning,performance -I include app/ src/ tests/ || true
+
+  build-release:
+    needs: test-and-analyze
+    # Запускать сборку релиза ТОЛЬКО если создан тег, начинающийся на 'v' 
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+    defaults:
+      run:
+        working-directory: ./lab2
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y g++ make
+
+    - name: Build Release Binaries
+      # make clean удаляет старые файлы, make собирает заново (по умолчанию с -O2)
+      run: |
+        make clean
+        make
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        # Путь к скомпилированному бинарнику новой лабы
+        files: |
+          lab2/build/oceanarium
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
