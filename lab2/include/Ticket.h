@@ -1,0 +1,22 @@
+#pragma once
+
+#include <string>
+
+class Ticket {
+private:
+    int price;
+    bool bought;
+    int visitor_id;
+    std::string full_name;
+
+public:
+    Ticket(int price = 0);
+
+    int get_price() const;
+    bool is_bought() const;
+    int get_visitor_id() const;
+    std::string get_full_name() const;
+
+    void set_bought(bool status);
+    void set_visitor_data(int id, const std::string& name);
+};

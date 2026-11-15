@@ -4,6 +4,8 @@
 #include <iostream> 
 #include <cstdlib>
 
+double Buffet::cash_register = 0.0;
+
 void EmployeesEquipment::wear_out(int amount) {
     durability -= amount;
     if (durability < 0) durability = 0;
