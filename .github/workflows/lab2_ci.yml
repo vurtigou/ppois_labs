@@ -1,0 +1,41 @@
+name: Lab 2 CI (Oceanarium)
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'lab2/**' # ВАЖНО: замени lab2 на название папки, где лежит эта лаба
+      - '.github/workflows/lab2_ci.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'lab2/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        # Укажи путь к папке с новой лабой
+        working-directory: ./lab2 
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ make gcov python3 cppcheck
+
+    - name: Build and Run Tests
+      # Это вызовет твой Makefile (make test)
+      run: make test
+
+    - name: Check Code Coverage (>90%)
+      # Твой Makefile (make coverage) вызовет check_coverage.py
+      run: make coverage
+
+    - name: Run Static Analysis (Linter)
+      run: |
+        cppcheck --enable=warning,performance -I include app/ src/ tests/ || true
