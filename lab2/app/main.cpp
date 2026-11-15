@@ -7,6 +7,12 @@
 #include "stuff.h"
 #include "visitors.h"
 #include "exceptions.h"    // EntityNotFoundError / InvalidActionError / DuplicateEntityError
+#include "Animal.h"       // Animal, Species
+#include "FeedingPlan.h"
+#include "habitats.h"     // Habitat, Tank
+#include "stuff.h"        // Employee, Cashier, Shift, Schedule
+#include "exceptions.h"   // OceanariumError и наследники
+// ...и всё остальное по мере надобности
 
 #include <algorithm>
 #include <iostream>
