@@ -1,5 +1,68 @@
-#include "core.h"
-#include "visitors.h"
+// --- core ---
+#include "AuditLog.h"
+#include "ContactInfo.h"
+#include "Identifier.h"
+#include "Location.h"
+#include "Oceanarium.h"
+
+// --- biology ---
+#include "Animal.h"
+#include "AnimalTransfer.h"
+#include "BreedingProgram.h"
+#include "Cub.h"
+#include "FeedingPlan.h"
+#include "HealthRecord.h"
+#include "Species.h"
+#include "VetVisit.h"
+
+// --- habitats ---
+#include "Exhibit.h"
+#include "Habitat.h"
+#include "HabitatMap.h"
+#include "QuarantineTank.h"
+#include "Tank.h"
+#include "Zone.h"
+
+// --- water ---
+#include "ControlSystem.h"
+#include "Ozonator.h"
+#include "SalinityController.h"
+#include "TemperatureController.h"
+#include "WaterQuality.h"
+#include "WaterSensor.h"
+
+// --- staff / equipment ---
+#include "Cashier.h"
+#include "Electrician.h"
+#include "ElectricianEquipment.h"
+#include "EmployeesEquipment.h"
+#include "Janitor.h"
+#include "Mop.h"
+#include "Plumber.h"
+#include "PlumberEquipment.h"
+#include "Schedule.h"
+#include "Shift.h"
+
+// --- inventory ---
+#include "AlcoholDrinks.h"
+#include "Buffet.h"
+#include "Drinks.h"
+#include "FeedStock.h"
+#include "Food.h"
+#include "Headphones.h"
+
+// --- visitors ---
+#include "AudioGuide.h"
+#include "DailyStatistics.h"
+#include "Favour.h"
+#include "GroupVisit.h"
+#include "Lounge.h"
+#include "Ticket.h"
+#include "VipVisit.h"
+#include "Visitor.h"
+
+// --- misc ---
+#include "exceptions.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -8,6 +71,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
