@@ -1,18 +1,36 @@
-#include "ContactInfo.h"  
-#include "Identifier.h"   
+// --- core ---
 #include "Location.h"
 #include "AuditLog.h"
 #include "Oceanarium.h"
-#include "habitats.h"
-#include "stuff.h"
-#include "visitors.h"
-#include "exceptions.h"    // EntityNotFoundError / InvalidActionError / DuplicateEntityError
-#include "Animal.h"       // Animal, Species
+
+// --- biology ---
+#include "Animal.h"
+#include "AnimalTransfer.h"
 #include "FeedingPlan.h"
-#include "habitats.h"     // Habitat, Tank
-#include "stuff.h"        // Employee, Cashier, Shift, Schedule
-#include "exceptions.h"   // OceanariumError и наследники
-// ...и всё остальное по мере надобности
+#include "Species.h"
+
+// --- habitats ---
+#include "Exhibit.h"
+#include "Habitat.h"
+#include "Tank.h"
+#include "Zone.h"
+
+// --- water ---
+#include "TemperatureController.h"
+#include "WaterQuality.h"
+
+// --- staff ---
+#include "Cashier.h"
+#include "Schedule.h"
+#include "Shift.h"
+
+// --- visitors ---
+#include "DailyStatistics.h"
+#include "Ticket.h"
+#include "Visitor.h"
+
+// --- misc ---
+#include "exceptions.h"
 
 #include <algorithm>
 #include <iostream>

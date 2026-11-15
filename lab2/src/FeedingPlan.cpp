@@ -6,7 +6,7 @@
 #include "Animal.h"
 #include "Cub.h"          // dynamic_cast<Cub*>
 #include "exceptions.h"   // OceanariumError, NullPointerError
-#include "inventory.h"    // FeedStock::get_name
+#include "FeedStock.h"    // FeedStock::get_name
 
 FeedingPlan::FeedingPlan(Animal* a, double portion)
     : animal(a), portion_grams(portion) {}
