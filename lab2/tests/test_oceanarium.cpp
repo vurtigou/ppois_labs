@@ -174,6 +174,9 @@ void test_biology() {
     cub.record_weight_change(3);
     check(cub.get_age() == 2, "Cub records an abnormal weight change once");
     check(!cub.can_breed(), "Cub is excluded from breeding");
+    Cub named("mini", animal, 2);
+    check(named.get_id() == "mini" && named.get_species().get_latin_name() == animal.get_species().get_latin_name(),
+          "Named cub stores the requested ID and inherits its parent's species");
 
     HealthRecord standalone;
     standalone.status_diagnosis();
@@ -192,6 +195,7 @@ void test_biology() {
     Animal predator("s", shark);
     expect_error<NullPointerError>([&] { breeding.select_pair(nullptr, &second); }, "Null parent");
     expect_error<InvalidActionError>([&] { breeding.select_pair(&cub, &second); }, "Immature parent");
+    expect_error<InvalidActionError>([&] { breeding.select_pair(&animal, &animal); }, "A pair requires two distinct animals");
     expect_error<SpeciesMismatchError>([&] { breeding.select_pair(&predator, &second); }, "Parents of different species");
     breeding.select_pair(&animal, &second);
     breeding.schedule_breeding("2026-12-01");
@@ -285,8 +289,17 @@ void test_habitats() {
     quarantine.admit_animal(&fish);
     check(quarantine.release_after_check("fish") == &fish && fish.get_current_tank() == nullptr, "Release clears tank reference");
     expect_error<EntityNotFoundError>([&] { quarantine.release_after_check("fish"); }, "Cannot discharge twice");
+    expect_error<EntityNotFoundError>([&] { quarantine.release_after_check("fish", reserve); },
+                                       "Cannot move an animal that is not in quarantine");
+    quarantine.admit_animal(&fish);
+    expect_error<UnsuitableHabitatError>([&] { quarantine.release_after_check("fish", adverse); },
+                                         "Unsuitable destination is rejected on release");
+    check(quarantine.contains_animal("fish") && fish.get_current_tank() == &quarantine,
+          "Failed release leaves the animal in quarantine");
+    check(quarantine.release_after_check("fish", reserve) == &fish &&
+          !quarantine.contains_animal("fish") && reserve.contains_animal("fish") && fish.get_current_tank() == &b,
+          "Successful release transfers the animal into the destination tank");
 
-    reserve.add_animal(&fish);
     expect_error<OceanariumError>([&] { isolated.start_filtration(); }, "Missing filtration equipment");
     Tank no_habitat("no habitat", nullptr, "pump");
     expect_error<OceanariumError>([&] { no_habitat.start_filtration(); }, "Filtration requires a habitat");

@@ -14,6 +14,9 @@ Cub::Cub(const std::string& parent_id, Species sp, double weight)
     // Генерируем ID: ID_родителя + "-Cub-" + случайное число от 1 до 100
     : Animal(parent_id + "-Cub-" + std::to_string(std::rand() % 100 + 1), std::move(sp), weight), age(0) {}
 
+Cub::Cub(std::string id, const Animal& parent, double weight)
+    : Animal(std::move(id), parent.get_species(), weight), age(0) {}
+
 void Cub::record_weight_change(double new_weight) {
     double old_weight = get_weight();
     Animal::record_weight_change(new_weight);

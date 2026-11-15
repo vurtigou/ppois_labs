@@ -15,6 +15,10 @@ void BreedingProgram::select_pair(Animal* parent1, Animal* parent2) {
         throw NullPointerError("BreedingProgram: Cannot select a pair with null animals.");
     }
 
+    if (parent1 == parent2) {
+        throw InvalidActionError("BreedingProgram: Select two distinct animals.");
+    }
+
     if (!parent1->can_breed() || !parent2->can_breed()) {
         throw InvalidActionError("BreedingProgram: One or both animals are cubs and cannot breed.");
     }

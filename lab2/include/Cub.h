@@ -11,6 +11,7 @@ private:
 public:
     // Конструктор принимает ID родителя, чтобы сгенерировать свой ID
     Cub(const std::string& parent_id, Species sp = Species(), double weight = 0.0);
+    Cub(std::string id, const Animal& parent, double weight);
 
     // Переопределяем методы родителя
     void record_weight_change(double new_weight) override;

@@ -1,5 +1,6 @@
 #include "QuarantineTank.h"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -55,4 +56,15 @@ Animal* QuarantineTank::release_after_check(const std::string& animal_id) {
     std::cout << "Quarantine check passed. Animal " << animal_id
               << " released from tank " << get_tank_id() << std::endl;
     return released;
+}
+
+Animal* QuarantineTank::release_after_check(const std::string& animal_id, Habitat& destination) {
+    const auto& animals = get_animals();
+    const auto found = std::find_if(animals.begin(), animals.end(), [&](const Animal* animal) {
+        return animal->get_id() == animal_id;
+    });
+    if (found == animals.end()) {
+        throw EntityNotFoundError("QuarantineTank: Animal " + animal_id + " not found in quarantine tank.");
+    }
+    return destination.add_animal(*found);
 }

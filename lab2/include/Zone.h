@@ -25,5 +25,6 @@ public:
 
     void add_exhibit(Exhibit* exhibit);
     std::string get_zone_name() const { return zone_name; }
+    int get_access_level() const { return access_level; }
     const std::vector<Exhibit*>& get_exhibits() const { return exhibits; }
 };

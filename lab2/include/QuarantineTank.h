@@ -17,4 +17,5 @@ public:
     void set_diagnosis(const std::string& diagnosis);
     void admit_animal(Animal* animal);
     Animal* release_after_check(const std::string& animal_id);
+    Animal* release_after_check(const std::string& animal_id, Habitat& destination);
 };
