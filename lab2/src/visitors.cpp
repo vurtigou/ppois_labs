@@ -1,13 +1,17 @@
 #include "visitors.h"
 #include "inventory.h"
+#include "exceptions.h"
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 double Buffet::cash_register = 0.0;
 DailyStatistics* DailyStatistics::current = nullptr; 
 
 Ticket::Ticket(int price) 
-    : price(price), bought(false), visitor_id(0), full_name("") {}
+    : price(price), bought(false), visitor_id(0), full_name("") {
+    if (price < 0) throw InvalidActionError("Ticket: Price cannot be negative.");
+}
 
 int Ticket::get_price() const { return price; }
 bool Ticket::is_bought() const { return bought; }
@@ -22,8 +26,11 @@ void Ticket::set_visitor_data(int id, const std::string& name) {
 }
 
 Visitor::Visitor(int id, const std::string& name, int age, double money)
-    : visitor_id(id), full_name(name), age(age), ticket(nullptr),
-      money_count(money), can_enter(false), in_group(false) {}
+    : age(age), visitor_id(id), full_name(name), ticket(nullptr),
+      money_count(0), can_enter(false), in_group(false) {
+    if (age < 0) throw InvalidActionError("Visitor: Age cannot be negative.");
+    set_money_count(money);
+}
 
 std::unique_ptr<Ticket> Visitor::buy_ticket(std::unique_ptr<Ticket> t) {
     if (!t)             return t;   // билета нет
@@ -74,7 +81,12 @@ void Visitor::remove_service(Favour* service) {
 const std::vector<Favour*>& Visitor::get_services() const {return services;}
 void Visitor::set_in_group(bool status)   { in_group = status; }
 void Visitor::set_visitor_id(int id)      { visitor_id = id; }
-void Visitor::set_money_count(double m)   { money_count = m; } 
+void Visitor::set_money_count(double money) {
+    if (!std::isfinite(money) || money < 0) {
+        throw InvalidActionError("Visitor: Balance must be finite and nonnegative.");
+    }
+    money_count = money;
+}
 
 bool   Visitor::is_in_group()     const { return in_group; }
 int    Visitor::get_visitor_id()  const { return visitor_id; }
@@ -87,11 +99,15 @@ Ticket* Visitor::get_ticket()     const { return ticket.get(); }
 GroupVisit::GroupVisit(int id) : group_id(id), can_enter(false) {}
 
 void GroupVisit::add_visitor(Visitor* v) {
-    if (!v) return;
+    if (!v) {
+        throw NullPointerError("GroupVisit: Cannot add a null visitor to the group.");
+    }
 
+    if (v->is_in_group()) {
+        throw DuplicateEntityError("GroupVisit: The visitor already belongs to a group.");
+    }
     visitors.push_back(v);
     v->set_in_group(true);
-    v->set_visitor_id(group_id);
 
     std::cout << "Visitor " << v->get_full_name()
               << " added to group " << group_id << std::endl;
@@ -156,27 +172,32 @@ void DailyStatistics::print_report() const {
     std::cout << "========================================" << std::endl;
 }
 
+Favour::Favour(double price) : price(price) {
+    if (!std::isfinite(price) || price < 0.0) {
+        throw InvalidActionError("Favour: Price must be finite and nonnegative.");
+    }
+}
+
 bool Favour::purchase(Visitor& visitor) {
     // 1. Проверяем наличие билета и права на вход
     if (visitor.get_ticket() == nullptr || !visitor.get_can_enter()) {
-        std::cout << "Ошибка: Посетитель " << visitor.get_full_name() 
-                  << " не имеет действительного билета для покупки услуг." << std::endl;
-        return false;
+        throw InvalidActionError("Favour: Visitor " + visitor.get_full_name() + " doesn't have a valid ticket.");
     }
 
     // 2. Проверяем деньги
     if (visitor.get_money_count() < price) {
-        std::cout << "Ошибка: У посетителя " << visitor.get_full_name() 
-                  << " недостаточно средств для покупки (Нужно: " << price 
-                  << ", Есть: " << visitor.get_money_count() << ")." << std::endl;
-        return false;
+        throw InsufficientFundsError("Favour: Visitor " + visitor.get_full_name() 
+                                     + " doesn't have enough money. (Need: " + std::to_string(price) 
+                                     + ", Has: " + std::to_string(visitor.get_money_count()) + ")");
     }
 
-    // 3. Списываем деньги и добавляем услугу
-    visitor.set_money_count(visitor.get_money_count() - price);
+    const auto& services = visitor.get_services();
+    if (std::find(services.begin(), services.end(), this) != services.end()) {
+        throw DuplicateEntityError("Favour: The visitor already bought this service.");
+    }
     visitor.add_service(this);
+    visitor.set_money_count(visitor.get_money_count() - price);
 
-    // <-- добавлено: учёт выручки от услуг
     if (auto* stats = DailyStatistics::get_current()) {
         stats->add_revenue(price);
     }
@@ -184,33 +205,38 @@ bool Favour::purchase(Visitor& visitor) {
 }
 
 void AudioGuide::assign_headphones(Headphones* hp, Visitor& visitor) {
-    // 1. Услуга должна быть куплена (симметрично для успеха и ошибки)
+    // 1. Услуга должна быть куплена
     bool bought = false;
     for (const auto* s : visitor.get_services()) {
         if (s == this) { bought = true; break; }
     }
     if (!bought) {
-        std::cout << "Ошибка: Посетитель " << visitor.get_full_name()
-                  << " не покупал услугу аудиогида." << std::endl;
-        return;
+        throw ServiceNotPurchasedError("AudioGuide: Visitor " + visitor.get_full_name() + " didn't buy this service.");
     }
 
-    // 2. Наушники должны существовать и быть свободными
-    if (hp == nullptr || hp->is_assigned()) {
-        std::cout << "Ошибка: Наушники отсутствуют или уже заняты другим посетителем." << std::endl;
-        std::cout << "Возврат средств за аудиогид." << std::endl;
-        visitor.set_money_count(visitor.get_money_count() + this->get_price());
+    if (hp && hp == headphones && hp->get_visitor() == &visitor) return;
+    if (headphones && headphones->get_visitor() == &visitor) {
+        throw InvalidActionError("AudioGuide: Return the current headphones first.");
+    }
+
+    if (!hp || hp->is_assigned() || headphones) {
+        visitor.set_money_count(visitor.get_money_count() + get_price());
         visitor.remove_service(this);
-        if (auto* stats = DailyStatistics::get_current()) {
-            stats->add_revenue(-this->get_price());
-        }
-        this->headphones = nullptr;
-        return;
+        if (auto* stats = DailyStatistics::get_current()) stats->add_revenue(-get_price());
+        throw InvalidActionError("AudioGuide: Headphones unavailable. Money refunded.");
     }
 
-    // 3. Выдаём наушники
-    this->headphones = hp;
+    headphones = hp;
     hp->set_visitor(&visitor);
+    std::cout << "AudioGuide: Headphones successfully assigned to " << visitor.get_full_name() << std::endl;
+}
+
+void AudioGuide::return_headphones(const Visitor& visitor) {
+    if (!headphones || headphones->get_visitor() != &visitor) {
+        throw InvalidActionError("AudioGuide: The visitor has no headphones to return.");
+    }
+    headphones->set_visitor(nullptr);
+    headphones = nullptr;
 }
 
 void Lounge::add_to_menu(Buffet* item) { 
@@ -218,12 +244,13 @@ void Lounge::add_to_menu(Buffet* item) {
 }
 
 bool Lounge::buy_item(Visitor& visitor, Buffet* item) {
-    if (!item) return false;
+    if (!item) {
+        throw NullPointerError("Lounge: Item pointer is null.");
+    }
 
-    //товар должен быть в меню этого Lounge
+        // 1. Товар должен быть в меню
     if (std::find(menu.begin(), menu.end(), item) == menu.end()) {
-        std::cout << "Ошибка: Товар отсутствует в меню Lounge." << std::endl;
-        return false;
+        throw EntityNotFoundError("Lounge: Item is not on the menu.");
     }
 
     // 2. Услуга Lounge должна быть куплена
@@ -232,32 +259,89 @@ bool Lounge::buy_item(Visitor& visitor, Buffet* item) {
         if (s == this) { has_lounge = true; break; }
     }
     if (!has_lounge) {
-        std::cout << "Ошибка: У посетителя " << visitor.get_full_name() 
-                  << " нет купленной услуги Lounge." << std::endl;
-        return false;
+        throw ServiceNotPurchasedError("Lounge: Visitor " + visitor.get_full_name() + " didn't buy the Lounge service.");
     }
 
     // 3. Проверка возраста для алкоголя
     if (dynamic_cast<AlcoholDrinks*>(item) != nullptr) {
         if (visitor.get_age() < 18) {
-            std::cout << "Ошибка: Посетителю " << visitor.get_full_name() 
-                      << " меньше 18 лет, продажа алкоголя запрещена. (Услуга Lounge сохранена)." << std::endl;
-            return false; 
+            throw InvalidActionError("Lounge: Underage visitor cannot buy alcohol. (Lounge service kept).");
         }
     }
 
     // 4. Деньги
     if (visitor.get_money_count() < item->get_price()) {
-        std::cout << "Ошибка: У посетителя " << visitor.get_full_name() 
-                  << " недостаточно средств для покупки." << std::endl;
-        return false;
+        throw InsufficientFundsError("Lounge: Not enough money for item. (Need: " 
+                                     + std::to_string(item->get_price()) + ")");
     }
 
     // 5. Списываем деньги и пополняем кассу
     visitor.set_money_count(visitor.get_money_count() - item->get_price());
     Buffet::add_to_cash_register(item->get_price());
+    if (auto* stats = DailyStatistics::get_current()) {
+        stats->add_revenue(item->get_price());
+    }
 
-    std::cout << "Успех: Посетитель " << visitor.get_full_name() 
-              << " купил в Lounge товар за " << item->get_price() << " руб." << std::endl;
+    std::cout << "Success: " << visitor.get_full_name() 
+              << " bought an item in Lounge for " << item->get_price() << " rub." << std::endl;
     return true;
+}
+
+VipVisit::VipVisit(double price) : Favour(price) {}
+
+VipVisit::Bundle* VipVisit::find_bundle(const Visitor& visitor) {
+    for (auto& p : bundles) {
+        if (p.first == &visitor) return &p.second;
+    }
+    return nullptr;
+}
+
+const VipVisit::Bundle* VipVisit::find_bundle(const Visitor& visitor) const {
+    for (const auto& p : bundles) {
+        if (p.first == &visitor) return &p.second;
+    }
+    return nullptr;
+}
+
+bool VipVisit::buy(Visitor& visitor) {
+    // 0. Защита от повторной покупки тем же посетителем.
+    if (find_bundle(visitor) != nullptr) {
+        throw InvalidActionError(
+            "VipVisit: Visitor " + visitor.get_full_name()
+            + " already bought this VIP package.");
+    }
+
+    // 1. Списываем деньги за сам VIP-визит (добавляет `this` в services).
+    if (!purchase(visitor)) {
+        return false;
+    }
+
+    // 2. Создаём ПЕРСОНАЛЬНЫЙ бандл для этого посетителя.
+    Bundle b;
+    b.audio_guide = std::make_unique<AudioGuide>(0.0);
+    for (int i = 0; i < 6; ++i) {
+        b.lounges.push_back(std::make_unique<Lounge>(0.0));
+    }
+
+    // 3. Раздаём сырые указатели внутрь бандла. Владелец — VipVisit.
+    visitor.add_service(b.audio_guide.get());
+    for (auto& lounge : b.lounges) {
+        visitor.add_service(lounge.get());
+    }
+
+    // 4. Сохраняем бандл. Порядок: сначала складываем в bundles, чтобы будущие find_bundle сразу его видели.
+    bundles.emplace_back(&visitor, std::move(b));
+    return true;
+}
+
+AudioGuide* VipVisit::get_audio_guide(const Visitor& visitor) const {
+    const Bundle* b = find_bundle(visitor);
+    return b ? b->audio_guide.get() : nullptr;
+}
+
+Lounge* VipVisit::get_lounge(const Visitor& visitor, int index) const {
+    const Bundle* b = find_bundle(visitor);
+    if (!b) return nullptr;
+    if (index < 0 || index >= static_cast<int>(b->lounges.size())) return nullptr;
+    return b->lounges[index].get();
 }

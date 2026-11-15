@@ -2,6 +2,14 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+#include <utility> 
+
+class Visitor;
+class Ticket;
+class Mop;
+class PlumberEquipment;
+class ElectricianEquipment;
 
 // Базовый абстрактный класс
 class Employee {
@@ -39,6 +47,8 @@ public:
 
 // Класс Уборщик
 class Janitor : public Employee {
+private:
+    Mop* mop;
 public:
     static const std::string position;
     static const double min_rate;
@@ -51,10 +61,14 @@ public:
     std::string get_position() const override;
     double get_pin_rate() const override { return pin_rate; }
     double get_bon_rate() const override { return bon_rate; }
+    void set_mop(Mop* m);  
+    void clean_area();
 };
 
 // Класс Сантехник
 class Plumber : public Employee {
+private:
+    PlumberEquipment* equipment;
 public:
     static const std::string position;
     static const double min_rate;
@@ -67,10 +81,14 @@ public:
     std::string get_position() const override;
     double get_pin_rate() const override { return pin_rate; }
     double get_bon_rate() const override { return bon_rate; }
+    void set_equipment(PlumberEquipment* eq); 
+    bool repair_leak();
 };
 
 // Класс Электрик
 class Electrician : public Employee {
+private:
+    ElectricianEquipment* equipment;
 public:
     static const std::string position;
     static const double min_rate;
@@ -83,10 +101,13 @@ public:
     std::string get_position() const override;
     double get_pin_rate() const override { return pin_rate; }
     double get_bon_rate() const override { return bon_rate; }
+    void set_equipment(ElectricianEquipment* eq); 
+    void inspect_circuits();
 };
 
-// Класс Кассир TODO взаимодействие с посетителями и билеты (другой .h файл)
 class Cashier : public Employee {
+private:
+    int tickets_sold;
 public:
     static const std::string position;
     static const double min_rate;
@@ -99,10 +120,18 @@ public:
     std::string get_position() const override;
     double get_pin_rate() const override { return pin_rate; }
     double get_bon_rate() const override { return bon_rate; }
+    // Метод продажи билета
+    std::pair<bool, std::unique_ptr<Ticket>>
+    sell_ticket(Visitor& visitor, std::unique_ptr<Ticket> ticket);
+    
+    //Геттер для счетчика
+    int get_tickets_sold() const { return tickets_sold; }
 };
 
 // Класс Смена
 class Shift {
+    friend class Schedule;
+
 private:
     Employee* employee; // ссылается на реального работника (non-owning)
     std::string start_time; // время начала смены
@@ -111,6 +140,7 @@ private:
     bool has_penalty;
     bool has_bonus;
     //сколько в итоге заработал за смену
+    bool paid = false;
     mutable double shift_rate; // добавлено mutable для изменения в const-методе
 
 public:
@@ -131,13 +161,12 @@ public:
 // Класс График на месяц
 class Schedule {
 private:
-    std::vector<Shift> shifts;
+    std::vector<Shift*> shifts;      // non-owning
     std::vector<Employee*> employees;
 
 public:
     Schedule() = default;
-    void add_shift(const Shift& shift);
-    
-    //идет по списку смен, для каждой смены: 1. если этого работника еще нет в векторе: 1.1 добавить его туда, 1.2 добавить в вектор зарплаты этого работника новый элемент - поле смены shift_rate; 2. если этот работник уже есть в векторе: 2.1 ИЗМЕНИТЬ последний элемент вектора его поля с зарплатой путем прибавления к этому элементу поле смены shift_rate;
+    void add_shift(Shift& shift);
+
     void calculate_monthly_salaries();
 };

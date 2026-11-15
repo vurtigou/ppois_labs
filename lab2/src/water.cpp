@@ -8,41 +8,31 @@
 
 WaterQuality::WaterQuality(double ph, double salinity,
                            double temperature, double oxygen_level)
-    : ph(ph), salinity(salinity),
-      temperature(temperature), oxygen_level(oxygen_level)
 {
-    if (ph < 0.0 || ph > 14.0)
-        throw WaterQualityViolationError(
-            "pH out of range [0, 14]: " + std::to_string(ph));
-    if (salinity < 0.0 || salinity > 45.0)
-        throw WaterQualityViolationError(
-            "Salinity out of range [0, 45]: " + std::to_string(salinity));
-    if (temperature < -2.0 || temperature > 40.0)
-        throw WaterQualityViolationError(
-            "Temperature out of range [-2, 40]: " + std::to_string(temperature));
-    if (oxygen_level < 0.0 || oxygen_level > 20.0)
-        throw WaterQualityViolationError(
-            "Oxygen level out of range [0, 20]: " + std::to_string(oxygen_level));
+    set_ph(ph);
+    set_salinity(salinity);
+    set_temperature(temperature);
+    set_oxygen_level(oxygen_level);
 }
 
 // Валидация в сеттерах — чтобы нельзя было выставить запрещённые значения
 void WaterQuality::set_ph(double v) {
-    if (v < 0.0 || v > 14.0)
+    if (!std::isfinite(v) || v < 0.0 || v > 14.0)
         throw WaterQualityViolationError("pH out of range [0, 14]: " + std::to_string(v));
     ph = v;
 }
 void WaterQuality::set_salinity(double v) {
-    if (v < 0.0 || v > 45.0)
+    if (!std::isfinite(v) || v < 0.0 || v > 45.0)
         throw WaterQualityViolationError("Salinity out of range [0, 45]: " + std::to_string(v));
     salinity = v;
 }
 void WaterQuality::set_temperature(double v) {
-    if (v < -2.0 || v > 40.0)
+    if (!std::isfinite(v) || v < -2.0 || v > 40.0)
         throw WaterQualityViolationError("Temperature out of range [-2, 40]: " + std::to_string(v));
     temperature = v;
 }
 void WaterQuality::set_oxygen_level(double v) {
-    if (v < 0.0 || v > 20.0)
+    if (!std::isfinite(v) || v < 0.0 || v > 20.0)
         throw WaterQualityViolationError("Oxygen level out of range [0, 20]: " + std::to_string(v));
     oxygen_level = v;
 }
@@ -125,10 +115,11 @@ bool ControlSystem::is_valid_date(int date) {
     int day   =  date / 1000000;
     int month = (date / 10000)   % 100;
     int year  =  date           % 10000;
-    if (year < 1900 || year > 2026) return false;
-    if (month < 1 || month > 12)    return false;
-    if (day   < 1 || day   > 31)    return false;
-    return true;
+    if (year < 1900 || year > 2999 || month < 1 || month > 12) return false;
+    constexpr int month_lengths[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    const bool leap_year = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    const int max_day = month_lengths[month - 1] + (month == 2 && leap_year ? 1 : 0);
+    return day >= 1 && day <= max_day;
 }
 
 // ---------------- Ozonator ----------------
@@ -238,33 +229,15 @@ void SalinityController::improving() {
     if (!get_is_good_working()) return;
 
     double current_sal = quality.get_salinity();
-    if (current_sal >= 0.0 && current_sal <= 35.0) return;
+    constexpr double max_salinity = 35.0;
+    constexpr double salinity_drop_per_unit = 2.0;
+    if (current_sal <= max_salinity) return;
 
-    if (current_sal < 0.0) {
-        double needed_delta    = 0.0 - current_sal;
-        double needed_resource = needed_delta / 2.0;
-        if (vol_brine >= needed_resource) {
-            vol_brine -= needed_resource;
-            quality.set_salinity(0.0);
-            return;
-        }
-        double possible_delta = vol_brine * 2.0;
-        quality.set_salinity(current_sal + possible_delta);
-        vol_brine = 0.0;
-        checking();
-    } else {
-        double needed_delta    = current_sal - 35.0;
-        double needed_resource = needed_delta / 2.0;
-        if (vol_water >= needed_resource) {
-            vol_water -= needed_resource;
-            quality.set_salinity(35.0);
-            return;
-        }
-        double possible_delta = vol_water * 2.0;
-        quality.set_salinity(current_sal - possible_delta);
-        vol_water = 0.0;
-        checking();
-    }
+    const double needed_water = (current_sal - max_salinity) / salinity_drop_per_unit;
+    const double used_water = std::min(vol_water, needed_water);
+    quality.set_salinity(current_sal - used_water * salinity_drop_per_unit);
+    vol_water -= used_water;
+    checking();
 }
 
 // ---------------- WaterSensor ----------------

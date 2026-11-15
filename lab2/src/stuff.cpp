@@ -1,6 +1,11 @@
 #include "stuff.h"
 #include "exceptions.h"
+#include "visitors.h"
+#include "inventory.h"
 #include <cstdlib> // Для rand()
+#include <iostream>
+#include <algorithm>
+#include <map>
 
 // Инициализация статических полей дочерних классов
 const std::string Janitor::position = "Janitor";
@@ -30,20 +35,110 @@ Employee::Employee(int id, int exp, int rate, int access_level)
 
 // Ставка = минимальная ставка * опыт работы
 Janitor::Janitor(int id, int exp) 
-    : Employee(id, exp, static_cast<int>(min_rate * exp), 0) {} 
+    : Employee(id, exp, static_cast<int>(min_rate * exp), 0), mop(nullptr) {} 
 std::string Janitor::get_position() const { return position; }
 
+void Janitor::set_mop(Mop* m) { mop = m; }
+
+void Janitor::clean_area() {
+    if (!mop) {
+        std::cout << "Уборщик (ID:" << id << "): У меня нет швабры!" << std::endl;
+        return;
+    }
+    try {
+        std::cout << "Уборщик (ID:" << id << ") начинает мыть пол..." << std::endl;
+        mop->use(); 
+        
+        // Если швабра сильно загрязнилась в процессе, уборщик её моет
+        if (mop->get_dirt_level() >= 75) {
+            std::cout << "Уборщик: Швабра слишком грязная, иду мыть." << std::endl;
+            mop->wash();
+        }
+    } 
+    catch (const EquipmentFailureError& e) {
+        std::cerr << "Уборщик (ID:" << id << "): Швабра сломалась! " << e.what() << std::endl;
+    } 
+    catch (const ResourceDepletedError& e) {
+        std::cerr << "Уборщик (ID:" << id << "): Закончилась вода или швабра слишком грязная! " << e.what() << std::endl;
+    } 
+    catch (const OceanariumError& e) {
+        std::cerr << "Уборщик (ID:" << id << ") не смог помыть пол: " << e.what() << std::endl;
+    }
+}
+
 Plumber::Plumber(int id, int exp, int access) 
-    : Employee(id, exp, static_cast<int>(min_rate * exp), access) {}
+    : Employee(id, exp, static_cast<int>(min_rate * exp), access), equipment(nullptr) {}
 std::string Plumber::get_position() const { return position; }
 
+void Plumber::set_equipment(PlumberEquipment* eq) { equipment = eq; }
+
+bool Plumber::repair_leak() {
+    if (!equipment) {
+        std::cout << "Сантехник (ID:" << id << "): У меня нет инструментов!" << std::endl;
+        return false;
+    }
+    try {
+        std::cout << "Сантехник (ID:" << id << ") берется за ремонт..." << std::endl;
+        equipment->use(); // Вызывает fix_leak()
+        return true;
+    } 
+    catch (const EquipmentFailureError& e) {
+        std::cerr << "Сантехник (ID:" << id << "): Ошибка инструментов: " << e.what() << std::endl;
+        return false;
+    } 
+    catch (const ResourceDepletedError& e) {
+        std::cerr << "Сантехник (ID:" << id << "): Не хватает ресурсов: " << e.what() << std::endl;
+        return false;
+    }
+}
+
 Electrician::Electrician(int id, int exp, int access) 
-    : Employee(id, exp, static_cast<int>(min_rate * exp), access) {}
+    : Employee(id, exp, static_cast<int>(min_rate * exp), access), equipment(nullptr) {}
 std::string Electrician::get_position() const { return position; }
 
+void Electrician::set_equipment(ElectricianEquipment* eq) { equipment = eq; }
+
+void Electrician::inspect_circuits() {
+    if (!equipment) {
+        std::cout << "Электрик (ID:" << id << "): У меня нет оборудования!" << std::endl;
+        return;
+    }
+    try {
+        std::cout << "Электрик (ID:" << id << ") проверяет цепи..." << std::endl;
+        equipment->use(); // Вызывает test_circuit()
+    } catch (const ResourceDepletedError& e) {
+        std::cerr << "Электрик (ID:" << id << "): " << e.what() << " (Пора зарядить батарею!)" << std::endl;
+    } catch (const EquipmentFailureError& e) {
+        std::cerr << "Электрик (ID:" << id << "): КРИТИЧЕСКАЯ ОШИБКА: " << e.what() << std::endl;
+    }
+}
+
 Cashier::Cashier(int id, int exp) 
-    : Employee(id, exp, static_cast<int>(min_rate * exp), 0) {}
+    : Employee(id, exp, static_cast<int>(min_rate * exp), 0), tickets_sold(0) {}
 std::string Cashier::get_position() const { return position; }
+      
+std::pair<bool, std::unique_ptr<Ticket>>
+Cashier::sell_ticket(Visitor& visitor, std::unique_ptr<Ticket> ticket) {
+    if (!ticket) {
+        throw NullPointerError("Cashier: Cannot sell a null ticket.");
+    }
+
+    // Visitor::buy_ticket возвращает: nullptr      — успешно куплено; nique_ptr   — не куплено, билет возвращён нам.
+    std::unique_ptr<Ticket> unsold = visitor.buy_ticket(std::move(ticket));
+
+    if (!unsold) {
+        tickets_sold++;
+        std::cout << "Кассир: Билет успешно продан посетителю "
+                  << visitor.get_full_name() << "!" << std::endl;
+        return {true, nullptr};
+    }
+
+    // Не куплено — билет возвращаем вызывающей стороне.
+    std::cout << "Кассир: Не удалось продать билет посетителю "
+              << visitor.get_full_name()
+              << " (билет возвращён в кассу)." << std::endl;
+    return {false, std::move(unsold)};
+}
 
 Shift::Shift(Employee* emp, std::string start, std::string end) 
     : employee(emp), start_time(start), end_time(end), 
@@ -91,30 +186,37 @@ double Shift::calculate_shift_rate() const {
 }
 
 // Реализация Schedule
-void Schedule::add_shift(const Shift& shift) {
+void Schedule::add_shift(Shift& shift) {
     if (!shift.get_employee()) {
         throw StaffManagementError("Schedule: Cannot add a shift with a null employee.");
     }
-    shifts.push_back(shift);
+
+    // Защита от повторного добавления той же смены
+    for (const Shift* s : shifts) {
+        if (s == &shift) {
+            throw DuplicateEntityError("Schedule: This shift is already added.");
+        }
+    }
+
+    shifts.push_back(&shift);
 }
 
 // Функция распределения зарплат
 void Schedule::calculate_monthly_salaries() {
-    for (const auto& shift : shifts) {
-        Employee* emp = shift.get_employee();
-        if (!emp) continue;
-        double actual_shift_rate = shift.calculate_shift_rate(); 
+    std::map<Employee*, std::vector<Shift*>> pending;
+    for (Shift* shift : shifts) {
+        if (!shift->paid) pending[shift->get_employee()].push_back(shift);
+    }
 
-        bool found = false;
-        for (size_t i = 0; i < employees.size(); ++i) {
-            if (employees[i] == emp) { found = true; break; }
-        }
+    for (const auto& [employee, employee_shifts] : pending) {
+        double total = 0.0;
+        for (Shift* shift : employee_shifts) total += shift->calculate_shift_rate();
 
-        if (!found) {
-            employees.push_back(emp);
-            emp->add_salary(actual_shift_rate); // Используем посчитанное значение
-        } else {
-            emp->update_last_salary(actual_shift_rate);
+        employee->add_salary(total);
+        for (Shift* shift : employee_shifts) shift->paid = true;
+
+        if (std::find(employees.begin(), employees.end(), employee) == employees.end()) {
+            employees.push_back(employee);
         }
     }
 }

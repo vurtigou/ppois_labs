@@ -5,7 +5,7 @@
 #include <cstddef>   // std::size_t
 
 #include "habitats.h"   // Tank
-#include "staff.h"      // Employee
+#include "stuff.h"      // Employee
 #include "exceptions.h" // OceanariumError
 
 // 1. ContactInfo

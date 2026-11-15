@@ -214,6 +214,8 @@ void Oceanarium::add_employee(Employee* employee) {
             "Ошибка найма: Этот сотрудник уже работает в океанариуме.");
     }
     employees.push_back(employee);
-    audit_log.record_action("A new employee was hired.");
-    //TODO добавить id сотрудника
+    
+    // в лог записывается ID и должность сотрудника
+    audit_log.record_action("Employee with ID " + std::to_string(employee->get_id()) + 
+                            " (" + employee->get_position() + ") was hired.");
 }

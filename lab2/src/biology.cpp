@@ -68,7 +68,7 @@ void VetVisit::close_visit() {
 }
 
 HealthRecord::HealthRecord(Animal* a, std::string status) 
-    : animal(a), current_status(status) {}
+    : animal(a), current_status(std::move(status)) {}
     
 void HealthRecord::add_visit(std::unique_ptr<VetVisit> visit) {
     if (!visit) {
@@ -129,7 +129,6 @@ bool FeedingPlan::check_diet_compliance() const {
     for (const auto* item : feed_items) {
         if (item == nullptr) continue;
 
-        // Получаем название корма как строку (например, "Squid") TODO СДЕЛАТЬ в классе FeedStock метод get_name()
         std::string food_name = item->get_name(); 
         if (animal_diet.find(food_name) == std::string::npos) return false;
     }
@@ -142,22 +141,24 @@ void FeedingPlan::calculate_portion() {
         throw NullPointerError("FeedingPlan: Animal is null, cannot calculate portion.");
     }
 
+    constexpr double grams_per_kg = 1000.0;
     double weight = animal->get_weight();
+    double weight_grams = weight * grams_per_kg;
 
     if (dynamic_cast<Cub*>(animal) != nullptr) {
-        portion_grams = weight * 0.03; // 3% от массы
+        portion_grams = weight_grams * 0.03; // 3% от массы
     } 
     else if (weight > 10.0) {
-        portion_grams = weight * 0.10; // 10% от массы
+        portion_grams = weight_grams * 0.10; // 10% от массы
     } 
     else {
-        portion_grams = weight * 0.05; // 5% от массы
+        portion_grams = weight_grams * 0.05; // 5% от массы
         std::cout << "Portion calculated: " << portion_grams << " grams (5% of mass)." << std::endl;
     }
 }
 
 Animal::Animal(std::string id, Species sp, double weight) 
-    : animal_id(id), species(sp), habitat(nullptr), 
+    : animal_id(std::move(id)), species(std::move(sp)), habitat(nullptr), 
       current_tank(nullptr),
       health_record(this), feeding_plan(this), weight_kg(weight) {}
 
@@ -187,7 +188,9 @@ void Animal::assign_feeding_plan(const FeedingPlan& plan) {
 }
 
 void Animal::record_weight_change(double new_weight) {
-    if (new_weight < 0) throw OceanariumError("Animal: Weight cannot be negative.");
+    if (!std::isfinite(new_weight) || new_weight < 0) {
+        throw InvalidActionError("Animal: Weight must be finite and nonnegative.");
+    }
     
     double old_weight = weight_kg;
     weight_kg = new_weight;
@@ -211,7 +214,7 @@ void Animal::record_weight_change(double new_weight) {
 
 Cub::Cub(const std::string& parent_id, Species sp, double weight)
     // Генерируем ID: ID_родителя + "-Cub-" + случайное число от 1 до 100
-    : Animal(parent_id + "-Cub-" + std::to_string(std::rand() % 100 + 1), sp, weight), age(0) {}
+    : Animal(parent_id + "-Cub-" + std::to_string(std::rand() % 100 + 1), std::move(sp), weight), age(0) {}
 
 void Cub::record_weight_change(double new_weight) {
     double old_weight = get_weight();
@@ -224,13 +227,14 @@ void Cub::record_weight_change(double new_weight) {
             auto visit = std::make_unique<VetVisit>(this);
             visit->diagnostic("Routine cub weight check", nullptr);
             visit->close_visit(); 
-            health_record.add_visit(std::move(visit));
+            get_health_record().add_visit(std::move(visit));
+            get_health_record().status_diagnosis();
         }
     }
 }
 
 void Cub::move_to_habitat(Habitat* new_habitat) {
-    if (new_habitat != nullptr) {
+    if (new_habitat && get_habitat() && new_habitat != get_habitat()) {
         throw InvalidActionError("Cub: Cannot be moved to another habitat! It must stay with its parents.");
     }
     // Покидание среды разрешено (для очистки / удаления)
@@ -238,7 +242,7 @@ void Cub::move_to_habitat(Habitat* new_habitat) {
 }
 
 BreedingProgram::BreedingProgram(Species sp, std::string status) 
-    : species(sp), status(status) {}
+    : species(std::move(sp)), status(std::move(status)) {}
 
 void BreedingProgram::select_pair(Animal* parent1, Animal* parent2) {
     if (!parent1 || !parent2) {
@@ -289,18 +293,11 @@ void AnimalTransfer::approve_transfer() {
         throw UnsuitableHabitatError("AnimalTransfer: Destination habitat is not suitable for animal " + animal->get_id());
     }
 
-    Animal* removed = old_habitat->remove_animal(animal->get_id());
-    if (!removed) {
+    if (!old_habitat->contains_animal(animal->get_id())) {
         throw EntityNotFoundError("AnimalTransfer: Animal not found in its current habitat.");
     }
-    // Используем try-catch на случай, если вдруг в новом танке не окажется места
-    try {
-        destination_habitat->add_animal(animal);
-    } catch (...) {
-        // Откат изменений: если добавить не удалось, возвращаем животное обратно в старую среду
-        old_habitat->add_animal(animal);
-        throw; 
-    }
+
+    destination_habitat->add_animal(animal);
 
     std::cout << "Transfer approved. Animal " << animal->get_id() 
               << " successfully moved to new habitat." << std::endl;

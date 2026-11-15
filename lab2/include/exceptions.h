@@ -62,3 +62,27 @@ class StaffManagementError : public OceanariumError {
 public:
     explicit StaffManagementError(const std::string& message) : OceanariumError(message) {}
 };
+
+// Исключение для поломки оборудования
+class EquipmentFailureError : public OceanariumError {
+public:
+    explicit EquipmentFailureError(const std::string& message) : OceanariumError(message) {}
+};
+
+// Исключение для нехватки ресурсов (вода, батарейка)
+class ResourceDepletedError : public OceanariumError {
+public:
+    explicit ResourceDepletedError(const std::string& message) : OceanariumError(message) {}
+};
+
+// Исключение для нехватки денег у посетителя
+class InsufficientFundsError : public OceanariumError {
+public:
+    explicit InsufficientFundsError(const std::string& message) : OceanariumError(message) {}
+};
+
+// Исключение, когда услуга не была куплена
+class ServiceNotPurchasedError : public OceanariumError {
+public:
+    explicit ServiceNotPurchasedError(const std::string& message) : OceanariumError(message) {}
+};

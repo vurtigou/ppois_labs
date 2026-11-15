@@ -36,6 +36,7 @@ public:
     bool is_compatible_with_species(const Species& other) const;
     
     std::string get_latin_name() const { return latin_name; }
+    double get_min_tank_volume() const { return min_tank_volume; }
     std::string get_diet_type() const { return diet_type; } 
     std::pair<double, double> get_ph_range() const { return ph_range; }
     std::pair<double, double> get_salinity_range() const { return salinity_range; }
@@ -88,6 +89,7 @@ public:
     bool check_diet_compliance() const;
     void calculate_portion();
 
+    double get_portion_grams() const { return portion_grams; }
     void set_animal(Animal* a) { animal = a; }
 };
 
@@ -121,6 +123,8 @@ public:
     virtual bool can_breed() const { return true; } // Обычные животные могут размножаться
     virtual void on_vet_visit() {}                  // Реакция на визит (для Cub - увеличение возраста)
 
+    FeedingPlan& get_feeding_plan() { return feeding_plan; }
+    const FeedingPlan& get_feeding_plan() const { return feeding_plan; }
     std::string get_id() const { return animal_id; }
     double get_weight() const { return weight_kg; }
     Habitat* get_habitat() const { return habitat; }
@@ -139,7 +143,7 @@ public:
     // Переопределяем методы родителя
     void record_weight_change(double new_weight) override;
     void move_to_habitat(Habitat* new_habitat) override;
-    bool can_be_moved_to_habitat() const override { return false; }
+    bool can_be_moved_to_habitat() const override { return get_habitat() == nullptr; }
     
     // Детеныши не могут спариваться
     bool can_breed() const override { return false; }

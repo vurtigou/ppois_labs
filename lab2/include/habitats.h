@@ -7,6 +7,7 @@
 #include "biology.h" // Для класса Animal
 #include "exceptions.h"
 
+class ControlSystem;
 class Tank;
 class Zone;
 
@@ -43,7 +44,7 @@ private:
     std::string title;
     std::string description;
     std::vector<Tank*> tanks; //non-owning
-    bool is_open;
+    bool opened;
 
 public:
     Exhibit(std::string title = "", std::string description = "", bool is_open = false);
@@ -56,7 +57,7 @@ public:
     
     void add_tank(Tank* tank);
     bool remove_tank(Tank* tank);
-    bool is_open() const { return is_open; }
+    bool is_open() const { return opened; }
     std::string get_title() const { return title; }
     const std::vector<Tank*>& get_tanks() const { return tanks; }
 };

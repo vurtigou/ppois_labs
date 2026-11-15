@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Employee.h"
+#include "stuff.h"
 
 class WaterQuality;
 class WaterSensor;
@@ -42,7 +42,8 @@ private:
     int access_level;
     bool is_good_working;
     std::vector<int> repair_dates;      // ддммгггг
-    WaterQuality &quality;
+protected:
+    WaterQuality& quality;
 
 public:
     ControlSystem(int id, WaterQuality& quality,

@@ -5,6 +5,7 @@
 #include <stdexcept> 
 #include <iostream>
 #include <memory> 
+#include <utility>
 #include "inventory.h"
 
 class Favour; // Предварительное объявление для вектора в Visitor
@@ -133,7 +134,7 @@ protected:
     // Общая логика покупки услуги (проверка билета, денег, списание, учёт)
     bool purchase(Visitor& visitor);
 public:
-    Favour(double price = 0.0) : price(price) {}
+    explicit Favour(double price = 0.0);
     virtual ~Favour() = default;
 
     double get_price() const { return price; }
@@ -149,6 +150,7 @@ public:
     bool buy(Visitor& visitor) override { return purchase(visitor); }
     //метод добавления наушников. если переданные наушники есть и никому не принадлежат (проверяется поле Visitor *visitor) они добавляются в поле Headphones* headphones, добавляется в их поле ссылка на посетителя. если наушников нет либо переданные уже имеют ссылку на посетителя, посетителю возвращается price услуги, а сама услуга удаляется из его вектора услуг)
     void assign_headphones(Headphones* hp, Visitor& visitor);
+    void return_headphones(const Visitor& visitor);
 };
 
 class Lounge : public Favour {
@@ -164,7 +166,28 @@ public:
 //покупатель, купивший услугу Lounge может купить любой элемент еды, напитков, алкогольных напитков. в случае, если возраст покупателя меньше 18, покупка не проходит, но услуга все еще остается у этого посетителя (он может повторно попытаться что-то купить)
     bool buy_item(Visitor& visitor, Buffet* item);
 };
+
 class VipVisit : public Favour {
+private:
+    // Один персональный набор услуг на посетителя.
+    struct Bundle {
+        std::unique_ptr<AudioGuide> audio_guide;
+        std::vector<std::unique_ptr<Lounge>> lounges;
+    };
+
+    // Посетитель- его бандл Visitor* — non-owning; бандл — owned.
+    std::vector<std::pair<Visitor*, Bundle>> bundles;
+
+    Bundle*       find_bundle(const Visitor& visitor);
+    const Bundle* find_bundle(const Visitor& visitor) const;
+
 public:
-    bool buy(Visitor& visitor) override { return purchase(visitor); }
+    VipVisit(double price = 0.0);
+
+    // Создаёт персональный бандл для visitor и раздаёт указатели в его services. Бросает InvalidActionError при повторной покупке тем же посетителем.
+    bool buy(Visitor& visitor) override;
+
+    // Доступ к персональным сервисам. Возвращают nullptr, если visitor не покупал.
+    AudioGuide* get_audio_guide(const Visitor& visitor) const;
+    Lounge*     get_lounge(const Visitor& visitor, int index) const;
 };

@@ -1,7 +1,9 @@
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 #include "habitats.h"
+#include "water.h"
 
 
 Habitat::Habitat(std::string type, double volume, const WaterQuality& water) 
@@ -26,7 +28,8 @@ bool Habitat::check_suitability_for_animal(const Animal& animal) const {
     bool temp_ok = (current_temp >= temp_norm.first && current_temp <= temp_norm.second);
     bool oxy_ok = (current_oxy >= oxy_norm.first && current_oxy <= oxy_norm.second);
 
-    return ph_ok && sal_ok && temp_ok && oxy_ok;
+    return volume_liters >= animal.get_species().get_min_tank_volume()
+        && ph_ok && sal_ok && temp_ok && oxy_ok;
 }
 
 double Habitat::calculate_biomass() const {
@@ -56,6 +59,10 @@ Animal* Habitat::add_animal(Animal* animal) {
     if (contains_animal(animal->get_id()))
         throw DuplicateEntityError("Habitat: Animal " + animal->get_id() + " already in this habitat.");
 
+    if (!check_suitability_for_animal(*animal)) {
+        throw UnsuitableHabitatError("Habitat: Unsuitable environment for animal " + animal->get_id());
+    }
+
     Tank* target_tank = nullptr;
     for (auto* tank : tanks) {
         if (tank && tank->get_animal_count() < 10) { target_tank = tank; break; }
@@ -68,6 +75,7 @@ Animal* Habitat::add_animal(Animal* animal) {
     Habitat* prev_habitat = animal->get_habitat();
     Tank* prev_tank = animal->get_current_tank();
 
+    target_tank->add_animal(animal);
     if (prev_habitat != nullptr && prev_habitat != this) {
         prev_habitat->remove_animal(animal->get_id());
     } else if (prev_habitat == nullptr && prev_tank != nullptr) {
@@ -75,7 +83,6 @@ Animal* Habitat::add_animal(Animal* animal) {
         prev_tank->remove_animal(animal->get_id());
     }
 
-    target_tank->add_animal(animal);
     animal->move_to_habitat(this);
 
     std::cout << "Animal " << animal->get_id() << " added to tank "
@@ -116,17 +123,17 @@ void Habitat::add_tank(Tank* tank) {
     tanks.push_back(tank);
 }
 
-Exhibit::Exhibit(std::string title, std::string description, bool is_open) : title(title), description(description), is_open(is_open) {}
+Exhibit::Exhibit(std::string title, std::string description, bool is_open) : title(title), description(description), opened(is_open) {}
 
 void Exhibit::open_exhibit() {
-    if (is_open) return;   
-    is_open = true;
+    if (opened) return;   
+    opened = true;
     std::cout << "Exhibit '" << title << "' is now OPEN for visitors." << std::endl;
 }
 
 void Exhibit::close_exhibit() {
-    if(!is_open) return;
-    is_open = false;
+    if (!opened) return;
+    opened = false;
     std::cout << "Exhibit '" << title << "' is now CLOSED." << std::endl;
 }
 
@@ -170,7 +177,7 @@ bool Exhibit::remove_tank(Tank* tank) {
 }
 
 Tank::Tank(std::string id, Habitat* parent, std::string filtration) 
-    : tank_id(id), parent_habitat(parent), filtration_system(filtration), 
+    : tank_id(std::move(id)), parent_habitat(parent), filtration_system(std::move(filtration)), 
       exhibit(nullptr), animal_count(0), is_filtration_on(false) {}
 
 void Tank::start_filtration() {
@@ -255,12 +262,6 @@ void Tank::emergency_drain(Habitat* backup_habitat) {
             "Some animals may already have been moved to backup habitat.");
     }
 
-    WaterQuality& wq = parent_habitat->get_water_quality();
-    wq.set_ph(0.0);
-    wq.set_salinity(0.0);
-    wq.set_temperature(0.0);
-    wq.set_oxygen_level(0.0);
-
     std::cout << "WARNING! Tank " << tank_id << " has been drained." << std::endl;
 
     // start_filtration может бросить (например, фильтр не установлен) —
@@ -315,7 +316,7 @@ Animal* Tank::remove_animal(const std::string& animal_id) {
         if ((*it)->get_id() == animal_id) {
             Animal* removed = *it;
             animals.erase(it);
-            removed->set_current_tank(nullptr);
+            if (removed->get_current_tank() == this) removed->set_current_tank(nullptr);
             animal_count--;
             return removed;
         }
@@ -435,7 +436,7 @@ void Zone::add_exhibit(Exhibit* exhibit) {
 }
 
 QuarantineTank::QuarantineTank(std::string id, Habitat* parent, std::string filtration, std::string reason) 
-    : Tank(id, parent, filtration), quarantine_reason(reason) {}
+    : Tank(std::move(id), parent, std::move(filtration)), quarantine_reason(std::move(reason)) {}
     
 void QuarantineTank::set_diagnosis(const std::string& diagnosis) {
     quarantine_reason = diagnosis;
