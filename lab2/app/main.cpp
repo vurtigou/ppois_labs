@@ -1,5 +1,12 @@
-#include "core.h"
+#include "ContactInfo.h"  
+#include "Identifier.h"   
+#include "Location.h"
+#include "AuditLog.h"
+#include "Oceanarium.h"
+#include "habitats.h"
+#include "stuff.h"
 #include "visitors.h"
+#include "exceptions.h"    // EntityNotFoundError / InvalidActionError / DuplicateEntityError
 
 #include <algorithm>
 #include <iostream>
