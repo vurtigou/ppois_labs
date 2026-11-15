@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y g++ make gcov python3 cppcheck
+      run: sudo apt-get update && sudo apt-get install -y g++ make python3 cppcheck
 
     - name: Build and Run Tests
       # Собирает проект и запускает юнит-тесты + CLI-тесты
