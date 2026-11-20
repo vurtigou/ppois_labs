@@ -29,6 +29,6 @@ public:
     void add_tank(Tank* tank);
     bool remove_tank(Tank* tank);
     bool is_open() const { return opened; }
-    std::string const get_title() const { return title; }
+    std::string const& get_title() const { return title; }
     const std::vector<Tank*>& get_tanks() const { return tanks; }
 };

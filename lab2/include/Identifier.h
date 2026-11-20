@@ -16,6 +16,6 @@ public:
 
     std::string generate_next();
 
-    std::string const get_prefix() const { return prefix; }
+    std::string const& get_prefix() const { return prefix; }
     int get_next_number() const { return number; }
 };

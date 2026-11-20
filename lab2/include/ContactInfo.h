@@ -15,6 +15,6 @@ public:
 
     bool is_valid_contact() const;
 
-    std::string get_phone() const { return phone; }
-    std::string get_email() const { return email; }
+    std::string const& get_phone() const { return phone; }
+    std::string const& get_email() const { return email; }
 };

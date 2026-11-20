@@ -14,7 +14,7 @@ public:
     FeedStock(std::string name = "", double weight_kg = 0.0)
         : name(name), weight_kg(weight_kg) {}
 
-    std::string const get_name() const { return name; }
+    std::string const& get_name() const { return name; }
 
     double get_weight_kg() const { return weight_kg; }
 

@@ -51,7 +51,7 @@ public:
 
     FeedingPlan& get_feeding_plan() { return feeding_plan; }
     const FeedingPlan& get_feeding_plan() const { return feeding_plan; }
-    std::string const get_id() const { return animal_id; }
+    std::string const& get_id() const { return animal_id; }
     double get_weight() const { return weight_kg; }
     Habitat* get_habitat() const { return habitat; }
     const Species& get_species() const { return species; }

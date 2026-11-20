@@ -31,7 +31,7 @@ public:
     void add_revenue(double amount);
 
     // Геттеры
-    std::string const get_date() const { return date; }
+    std::string const& get_date() const { return date; }
     int get_tickets_sold() const { return tickets_sold; }
     int get_visitors_count() const { return visitors_count; }
     int get_groups_count() const { return groups_count; }

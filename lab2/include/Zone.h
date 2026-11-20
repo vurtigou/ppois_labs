@@ -27,7 +27,7 @@ public:
     void evacuate_tank_animals(Tank* tank, Habitat* backup_habitat);
 
     void add_exhibit(Exhibit* exhibit);
-    std::string const get_zone_name() const { return zone_name; }
+    std::string const& get_zone_name() const { return zone_name; }
     int get_access_level() const { return access_level; }
     const std::vector<Exhibit*>& get_exhibits() const { return exhibits; }
 };

@@ -60,8 +60,8 @@ public:
      */
     void add_employee(Employee* employee);
 
-    std::string const get_name() const { return name; }
-    Location  const  get_location() const { return location; }
+    std::string const& get_name() const { return name; }
+    Location  const&  get_location() const { return location; }
 
     const std::vector<Tank*>&     get_tanks()     const { return tanks; }
     const std::vector<Employee*>& get_employees() const { return employees; }

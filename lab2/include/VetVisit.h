@@ -26,6 +26,6 @@ public:
     void prescribe_treatment(const std::string& new_treatment, QuarantineTank* quarantine_tank = nullptr);
     void close_visit();
 
-    std::string const get_diagnosis() const { return diagnosis; }
-    std::string const get_treatment() const { return treatment; }
+    std::string const& get_diagnosis() const { return diagnosis; }
+    std::string const& get_treatment() const { return treatment; }
 };

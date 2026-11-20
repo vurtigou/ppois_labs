@@ -25,9 +25,9 @@ public:
 
     bool is_compatible_with_species(const Species& other) const;
 
-    std::string const get_latin_name() const { return latin_name; }
+    std::string const& get_latin_name() const { return latin_name; }
     double get_min_tank_volume() const { return min_tank_volume; }
-    std::string const get_diet_type() const { return diet_type; }
+    std::string const& get_diet_type() const { return diet_type; }
     std::pair<double, double> get_ph_range() const { return ph_range; }
     std::pair<double, double> get_salinity_range() const { return salinity_range; }
     std::pair<double, double> get_temperature_range() const { return temperature_range; }
