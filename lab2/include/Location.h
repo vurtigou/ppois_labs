@@ -17,8 +17,8 @@ public:
     // Haversine. Бросает std::invalid_argument, если координаты не заданы/битые.
     double calculate_distance_to(const Location& other) const;
 
-    std::string get_city()        const { return city; }
-    std::string get_address()     const { return address; }
-    std::string get_coordinates() const { return coordinates; }
+    std::string const get_city()        const { return city; }
+    std::string const  get_address()     const { return address; }
+    std::string const get_coordinates() const { return coordinates; }
     bool is_valid() const { return !city.empty(); }
 };

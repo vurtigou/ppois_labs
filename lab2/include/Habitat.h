@@ -47,5 +47,5 @@ public:
     // Геттеры
     const WaterQuality& get_water_quality() const { return water_quality; }
     WaterQuality&       get_water_quality()       { return water_quality; }
-    std::string get_habitat_type() const { return habitat_type; }
+    std::string const get_habitat_type() const { return habitat_type; }
 };

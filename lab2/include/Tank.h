@@ -49,7 +49,7 @@ public:
     void clear_state();
 
     void set_exhibit(Exhibit* ex) { exhibit = ex; }
-    std::string get_tank_id() const { return tank_id; }
+    std::string const get_tank_id() const { return tank_id; }
     Habitat* get_habitat() const { return parent_habitat; }
     const std::vector<Animal*>& get_animals() const { return animals; }
     Exhibit* get_exhibit() const { return exhibit; }
