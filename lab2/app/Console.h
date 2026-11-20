@@ -41,10 +41,14 @@
 #include <string>
 #include <vector>
 
+/** @brief Owns the demonstration session and dispatches CLI commands to the domain model.
+ * @ingroup console
+ */
 class Console {
 public:
     Console();
     ~Console();
+    /// Reads commands until quit or end-of-input and reports invalid requests.
     void run(std::istream& input);
 
 private:

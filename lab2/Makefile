@@ -1,5 +1,6 @@
 CXX ?= c++
 GCOV ?= gcov
+DOXYGEN ?= doxygen
 PYTHON ?= python3
 BUILD_DIR ?= build
 CPPFLAGS += -Iinclude
@@ -12,7 +13,7 @@ APP_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard app/*.cpp))
 OBJECTS := $(DOMAIN_OBJECTS) $(TEST_OBJECTS) $(APP_OBJECTS)
 COVERAGE_DIR := $(BUILD_DIR)/coverage
 
-.PHONY: all test coverage clean
+.PHONY: all test coverage docs clean
 all: $(BUILD_DIR)/oceanarium
 
 $(BUILD_DIR)/oceanarium: $(DOMAIN_OBJECTS) $(APP_OBJECTS)
@@ -38,6 +39,9 @@ coverage-test: $(BUILD_DIR)/oceanarium_tests $(BUILD_DIR)/oceanarium
 	./$(BUILD_DIR)/oceanarium_tests
 	sh tests/test_cli.sh ./$(BUILD_DIR)/oceanarium
 	$(PYTHON) scripts/check_coverage.py "$(GCOV)" "$(BUILD_DIR)"
+
+docs:
+	$(DOXYGEN) Doxyfile
 
 clean:
 	rm -rf $(BUILD_DIR)
