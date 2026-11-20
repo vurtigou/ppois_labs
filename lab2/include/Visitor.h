@@ -51,7 +51,7 @@ public:
     int    get_age() const;
     double get_money_count() const;
     bool   get_can_enter() const;
-    std::string get_full_name() const;
+    std::string const& get_full_name() const;
     /**
      * @brief Returns a non-owning pointer to the visitor’s current ticket.
      */
