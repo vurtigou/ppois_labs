@@ -12,7 +12,7 @@ Ticket::Ticket(int price)
 int Ticket::get_price() const { return price; }
 bool Ticket::is_bought() const { return bought; }
 int Ticket::get_visitor_id() const { return visitor_id; }
-std::string Ticket::get_full_name() const { return full_name; }
+std::string const& Ticket::get_full_name() const { return full_name; }
 
 void Ticket::set_bought(bool status) { bought = status; }
 

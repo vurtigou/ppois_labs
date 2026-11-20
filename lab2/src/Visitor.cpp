@@ -80,5 +80,5 @@ int    Visitor::get_visitor_id()   const { return visitor_id; }
 double Visitor::get_money_count()  const { return money_count; }
 int    Visitor::get_age()          const { return age; }
 bool   Visitor::get_can_enter()    const { return can_enter; }
-std::string Visitor::get_full_name() const { return full_name; }
+std::string const& Visitor::get_full_name() const { return full_name; }
 Ticket* Visitor::get_ticket()      const { return ticket.get(); }
