@@ -2,6 +2,9 @@
 
 class Visitor;
 
+/** @brief Shared audio-guide headset that can be assigned to one visitor.
+ * @ingroup inventory
+ */
 class Headphones {
 private:
     Visitor* visitor;

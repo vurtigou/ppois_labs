@@ -2,6 +2,9 @@
 
 #include "ControlSystem.h"
 
+/** @brief Dilutes water when salinity exceeds the operating range.
+ * @ingroup water
+ */
 class SalinityController : public ControlSystem {
 private:
     double vol_water;

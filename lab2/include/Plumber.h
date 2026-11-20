@@ -7,6 +7,9 @@
 class PlumberEquipment;
 
 // Класс Сантехник
+/** @brief Employee who repairs leaks with plumbing equipment.
+ * @ingroup staff
+ */
 class Plumber : public Employee {
 private:
     PlumberEquipment* equipment;

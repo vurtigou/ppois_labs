@@ -2,6 +2,9 @@
 
 #include "EmployeesEquipment.h"
 
+/** @brief Cleaning tool with dirt and water levels.
+ * @ingroup inventory
+ */
 class Mop : public EmployeesEquipment {
 private:
     int dirt_level;     // Загрязненность (0 - чистая, 100 - грязная)

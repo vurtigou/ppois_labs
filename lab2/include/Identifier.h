@@ -2,6 +2,9 @@
 
 #include <string>
 
+/** @brief Sequential identifier generator with a configurable prefix.
+ * @ingroup core
+ */
 class Identifier {
 private:
     std::string prefix;

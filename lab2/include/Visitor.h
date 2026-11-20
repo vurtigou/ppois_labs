@@ -8,6 +8,9 @@
 
 class Favour;
 
+/** @brief Visitor with a balance, ticket, group status, and purchased services.
+ * @ingroup visitors
+ */
 class Visitor {
 private:
     int age;
@@ -27,6 +30,11 @@ public:
     Visitor(Visitor&&)                 = default;
     Visitor& operator=(Visitor&&)      = default;
 
+    /**
+     * @brief Attempts to buy a ticket at the applicable individual or group price.
+     * @return The caller’s ticket on rejection, or nullptr after a successful sale.
+     * @note A null input is returned as nullptr.
+     */
     std::unique_ptr<Ticket> buy_ticket(std::unique_ptr<Ticket> t);
 
     void fill_ticket_data();
@@ -44,5 +52,8 @@ public:
     double get_money_count() const;
     bool   get_can_enter() const;
     std::string get_full_name() const;
+    /**
+     * @brief Returns a non-owning pointer to the visitor’s current ticket.
+     */
     Ticket* get_ticket() const;       // non-owning view
 };

@@ -1,6 +1,9 @@
 #pragma once
 
 // Базовый класс для всей еды и напитков
+/** @brief Base for priced food and drinks with a shared cash register.
+ * @ingroup inventory
+ */
 class Buffet {
 protected:
     double price;

@@ -2,6 +2,9 @@
 
 #include "EmployeesEquipment.h"
 
+/** @brief Circuit-testing tools with battery and insulation levels.
+ * @ingroup inventory
+ */
 class ElectricianEquipment : public EmployeesEquipment {
 private:
     int insulation_level; // Уровень изоляции (если упадет до 0 - ударит током)

@@ -1,6 +1,9 @@
 #pragma once
 
 // Базовый класс для всего рабочего инвентаря
+/** @brief Base for equipment with usable durability and repair behavior.
+ * @ingroup inventory
+ */
 class EmployeesEquipment {
 protected:
     int durability;      // Прочность (от 0 до 100)

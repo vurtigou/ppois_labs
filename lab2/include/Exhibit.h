@@ -7,6 +7,9 @@ class Animal;
 class Tank;
 
 // выставочный зал
+/** @brief Visitor display with open or closed status and a collection of tanks.
+ * @ingroup habitats
+ */
 class Exhibit {
 private:
     std::string title;

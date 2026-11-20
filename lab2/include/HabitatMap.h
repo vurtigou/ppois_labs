@@ -6,6 +6,9 @@
 class Tank;
 class Zone;
 
+/** @brief Locates tanks by identifier across registered zones.
+ * @ingroup habitats
+ */
 class HabitatMap {
 private:
     std::vector<Zone*> zones; // non-owning

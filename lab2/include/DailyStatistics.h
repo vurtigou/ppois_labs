@@ -2,6 +2,9 @@
 
 #include <string>
 
+/** @brief Tracks daily ticket sales, admissions, groups, and revenue.
+ * @ingroup visitors
+ */
 class DailyStatistics {
 private:
     std::string date;           // Дата (в формате "YYYY-MM-DD")
@@ -16,6 +19,10 @@ private:
 
 public:
     DailyStatistics(std::string date = "");
+    /**
+     * @brief Sets the active, non-owning statistics sink for transactions.
+     * @note The caller must clear or replace the sink before destroying it.
+     */
     static void set_current(DailyStatistics* stats) { current = stats; }
     static DailyStatistics* get_current() { return current; }
     void add_ticket_sale(double price, int count = 1);

@@ -2,6 +2,9 @@
 
 #include <string>
 
+/** @brief Phone and email information with basic format validation.
+ * @ingroup core
+ */
 class ContactInfo {
 private:
     std::string phone;

@@ -2,6 +2,9 @@
 
 #include "ControlSystem.h"
 
+/** @brief Corrects pH using available carbon dioxide or alkali.
+ * @ingroup water
+ */
 class WaterSensor : public ControlSystem {
 private:
     double vol_co2;

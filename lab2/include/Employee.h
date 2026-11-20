@@ -4,6 +4,9 @@
 #include <vector>
 
 // Базовый абстрактный класс
+/** @brief Staff member with a role, rate, access level, and pay history.
+ * @ingroup staff
+ */
 class Employee {
 protected:
     int rate;        // ставка

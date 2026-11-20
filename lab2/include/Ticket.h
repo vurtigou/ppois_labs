@@ -2,6 +2,9 @@
 
 #include <string>
 
+/** @brief Admission ticket with its price and purchaser details.
+ * @ingroup visitors
+ */
 class Ticket {
 private:
     int price;

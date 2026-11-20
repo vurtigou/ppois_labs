@@ -7,6 +7,9 @@
 class ElectricianEquipment;
 
 // Класс Электрик
+/** @brief Employee who checks circuits with electrical equipment.
+ * @ingroup staff
+ */
 class Electrician : public Employee {
 private:
     ElectricianEquipment* equipment;

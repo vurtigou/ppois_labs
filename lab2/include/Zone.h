@@ -7,6 +7,9 @@ class Exhibit;
 class Habitat;
 class Tank;
 
+/** @brief Area with an access level and one or more exhibits.
+ * @ingroup habitats
+ */
 class Zone {
 private:
     std::string zone_name;

@@ -2,6 +2,9 @@
 
 #include <string>
 
+/** @brief Named location with optional coordinates for distance calculations.
+ * @ingroup core
+ */
 class Location {
 private:
     std::string city;

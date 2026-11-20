@@ -5,6 +5,9 @@
 class Employee;
 
 // Класс Смена
+/** @brief Employee work period with incidents, adjustments, and calculated pay.
+ * @ingroup staff
+ */
 class Shift {
     friend class Schedule;
 

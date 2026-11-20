@@ -2,6 +2,9 @@
 
 #include "ControlSystem.h"
 
+/** @brief Brings water temperature back toward its operating range.
+ * @ingroup water
+ */
 class TemperatureController : public ControlSystem {
 private:
     int amperage;

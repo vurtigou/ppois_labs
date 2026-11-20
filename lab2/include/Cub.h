@@ -4,6 +4,9 @@
 
 #include "Animal.h"
 
+/** @brief Young animal with additional veterinary checks and restricted movement.
+ * @ingroup animals
+ */
 class Cub : public Animal {
 private:
     int age;

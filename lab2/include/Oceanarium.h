@@ -1,5 +1,23 @@
 #pragma once
 
+/** @defgroup core Core and audit */
+
+/** @defgroup animals Animals and veterinary care */
+
+/** @defgroup habitats Habitats, exhibits, and tanks */
+
+/** @defgroup water Water quality and controls */
+
+/** @defgroup staff Staff and payroll */
+
+/** @defgroup inventory Equipment and food stock */
+
+/** @defgroup visitors Visitors, tickets, and services */
+
+/** @defgroup errors Domain exceptions */
+
+/** @defgroup console Console application */
+
 #include <string>
 #include <vector>
 
@@ -9,6 +27,9 @@
 class Tank;
 class Employee;
 
+/** @brief Registers tanks and employees and tracks daily opening and closing.
+ * @ingroup core
+ */
 class Oceanarium {
 private:
     std::string name;
@@ -30,7 +51,13 @@ public:
     void open_for_day();
     void close_for_day();
 
+    /**
+     * @brief Registers an externally owned tank and records the addition in the audit log.
+     */
     void add_tank(Tank* tank);
+    /**
+     * @brief Registers an externally owned employee and records the addition in the audit log.
+     */
     void add_employee(Employee* employee);
 
     std::string get_name() const { return name; }

@@ -2,6 +2,9 @@
 
 #include <string>
 
+/** @brief Named food stock with a mass in kilograms.
+ * @ingroup inventory
+ */
 class FeedStock {
 private:
     std::string name;

@@ -2,6 +2,9 @@
 
 #include "ControlSystem.h"
 
+/** @brief Regulates oxygen using the available treatment resources.
+ * @ingroup water
+ */
 class Ozonator : public ControlSystem {
 private:
     double availible_vol_ozon;

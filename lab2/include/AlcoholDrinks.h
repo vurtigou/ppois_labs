@@ -2,6 +2,9 @@
 
 #include "Buffet.h"
 
+/** @brief Alcoholic drink with a recorded volume and alcohol content.
+ * @ingroup inventory
+ */
 class AlcoholDrinks : public Buffet {
 private:
     int vol;

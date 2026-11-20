@@ -9,6 +9,9 @@
 class Ticket;
 class Visitor;
 
+/** @brief Employee who sells tickets and counts successful sales.
+ * @ingroup staff
+ */
 class Cashier : public Employee {
 private:
     int tickets_sold;
@@ -28,6 +31,10 @@ public:
     double get_bon_rate() const override { return bon_rate; }
 
     // Метод продажи билета
+    /**
+     * @brief Attempts to sell a caller-owned ticket and increments sales only on success.
+     * @return The success flag and the unsold ticket, if the purchase failed.
+     */
     std::pair<bool, std::unique_ptr<Ticket>>
     sell_ticket(Visitor& visitor, std::unique_ptr<Ticket> ticket);
 

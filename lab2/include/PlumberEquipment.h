@@ -2,6 +2,9 @@
 
 #include "EmployeesEquipment.h"
 
+/** @brief Pressure and leak-repair tools with limited durability.
+ * @ingroup inventory
+ */
 class PlumberEquipment : public EmployeesEquipment {
 private:
     int pressure_gauge; // Показатель давления в системе (для поиска утечек)

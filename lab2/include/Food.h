@@ -4,6 +4,9 @@
 
 #include "Buffet.h"
 
+/** @brief Buffet food with ingredients and a portion weight.
+ * @ingroup inventory
+ */
 class Food : public Buffet {
 private:
     std::string compound;

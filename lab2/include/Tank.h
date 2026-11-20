@@ -8,6 +8,9 @@ class ControlSystem;
 class Exhibit;
 class Habitat;
 
+/** @brief Houses animals and coordinates filtration and emergency evacuation.
+ * @ingroup habitats
+ */
 class Tank {
 private:
     std::string tank_id;
@@ -28,10 +31,18 @@ public:
 
     // Проверяет is_filtration_on, если false, делает true.
     // Берёт water quality из parent_habitat и улучшает показатели.
+    /**
+     * @brief Runs operational controllers against the parent habitat’s water.
+     * @throws OceanariumError The tank lacks filtration equipment or a parent habitat.
+     */
     void start_filtration();
     // Проверяет качество воды. Если показатели сильно ниже нормы — создаёт
     // AnimalTransfer-заявки для животных и переносит их в backup_habitat.
     // Вызывает start_filtration.
+    /**
+     * @brief Attempts to evacuate the tank and restart filtration when water is critical.
+     * @throws OceanariumError Animals remain after evacuation. Animals already moved stay in the backup habitat.
+     */
     void emergency_drain(Habitat* backup_habitat);
     bool is_water_critical() const;
     void evacuate_all_animals(Habitat* backup_habitat);

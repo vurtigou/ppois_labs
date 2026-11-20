@@ -3,6 +3,9 @@
 class Visitor;
 
 // абстрактный класс
+/** @brief Base for paid visitor services and their common purchase rules.
+ * @ingroup visitors
+ */
 class Favour {
 private:
     double price;

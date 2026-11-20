@@ -7,6 +7,9 @@
 class Mop;
 
 // Класс Уборщик
+/** @brief Employee who cleans areas with a mop.
+ * @ingroup staff
+ */
 class Janitor : public Employee {
 private:
     Mop* mop;

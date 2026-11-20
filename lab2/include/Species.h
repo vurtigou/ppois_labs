@@ -3,6 +3,9 @@
 #include <string>
 #include <utility>
 
+/** @brief Species profile with diet, tank size, and water requirements.
+ * @ingroup animals
+ */
 class Species {
 private:
     std::string latin_name;

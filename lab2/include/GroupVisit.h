@@ -4,6 +4,9 @@
 
 class Visitor;
 
+/** @brief Visitor group with membership and eligibility checks.
+ * @ingroup visitors
+ */
 class GroupVisit {
 private:
     int group_id;
@@ -19,6 +22,10 @@ public:
     GroupVisit& operator=(GroupVisit&&)      = default;
 
     void add_visitor(Visitor* v);
+    /**
+     * @brief Removes visitors without valid admission and checks the remaining group.
+     * @return True if at least one eligible visitor remains.
+     */
     bool check_can_enter();
 
     int  get_group_id() const;

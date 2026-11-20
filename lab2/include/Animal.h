@@ -9,6 +9,9 @@
 class Habitat;
 class Tank;
 
+/** @brief Animal with a species profile, weight, feeding plan, and health history.
+ * @ingroup animals
+ */
 class Animal {
 private:
     std::string animal_id;
@@ -32,8 +35,15 @@ public:
     void set_id(const std::string& new_id);
     Tank* get_current_tank() const { return current_tank; }
     void set_current_tank(Tank* tank) { current_tank = tank; }
+    /**
+     * @brief Records mass in kilograms and adjusts the current feeding plan.
+     * @throws InvalidActionError The weight is negative or non-finite.
+     */
     virtual void record_weight_change(double new_weight);
     virtual void move_to_habitat(Habitat* new_habitat);
+    /**
+     * @brief Copies a feeding plan and binds the copy to this animal.
+     */
     void assign_feeding_plan(const FeedingPlan& plan);
 
     virtual bool can_breed() const { return true; } // Обычные животные могут размножаться

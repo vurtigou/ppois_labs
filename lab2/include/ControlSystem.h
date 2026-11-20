@@ -5,6 +5,9 @@
 class Employee;
 class WaterQuality;
 
+/** @brief Water-treatment device with maintenance access and repair history.
+ * @ingroup water
+ */
 class ControlSystem {
 private:
     int id;
@@ -34,10 +37,22 @@ public:
     const std::vector<int>& get_repair_dates() const { return repair_dates; }
     const std::vector<Employee*>& get_employees() const { return employees; }
 
+    /**
+     * @brief Registers a non-owning reference to a maintenance worker.
+     * @throws DuplicateEntityError The employee ID is already assigned.
+     */
     void assign_employee(Employee* employee);
     void release_employee(int employee_id);
 
     bool can_work(const Employee* employee) const;
+    /**
+     * @brief Records authorized maintenance and restores the device when it is out of service.
+     * @param employee Assigned employee with sufficient access.
+     * @param date Calendar date encoded as DDMMYYYY.
+     * @throws EmployeePermissionDeniedError The employee lacks access.
+     * @throws InvalidDateError The maintenance date is invalid.
+     * @throws DuplicateEntityError Maintenance is already recorded for the date.
+     */
     void perform_work(const Employee* employee, int date);
 
     static bool is_valid_date(int date);
