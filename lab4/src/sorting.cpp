@@ -50,7 +50,7 @@ void runTests() {
 
     std::cout << "[OK] Все модульные тесты пройдены успешно!\n\n";
 }
-
+ 
 // Демонстрационные функции (CLI)
 void demoInsertionInt() {
     std::vector<int> data = {8, 3, 1, 7, 0, 10, 2};

@@ -11,11 +11,13 @@
 
 // Пользовательский класс
 class Student {
-public:
+private:
     std::string name;
     int id;
-
+public:
     Student(std::string name, int id);
+    std::string const& get_name() const { return name; }
+    int get_id() const { return id; }
     bool operator<(const Student& other) const;
     bool operator==(const Student& other) const;
 
