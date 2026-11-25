@@ -2,24 +2,11 @@
 
 namespace cli {
 
+/// Runs the interactive sorting and directed graph demonstrations.
 class ConsoleMenu {
 public:
-    ConsoleMenu() = default;
-    ~ConsoleMenu() = default;
-
+    /// Reads commands until the user selects Exit or the input stream ends.
     void run();
-
-private:
-    static void printMainMenu();
-    static void printSortingMenu();
-    static void printGraphMenu();
-
-    void handleSortingTask();
-    void handleGraphTask();
-
-    static int readInt(const char* prompt, int minVal, int maxVal);
-    static double readDouble(const char* prompt, double minVal, double maxVal);
-    static void clearInputStream();
 };
 
 } // namespace cli
