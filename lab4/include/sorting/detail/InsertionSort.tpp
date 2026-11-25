@@ -1,7 +1,6 @@
-#ifndef INSERTION_SORT_CPP
-#define INSERTION_SORT_CPP
+#pragma once
 
-#include "InsertionSort.h"
+#include "../InsertionSort.h"
 
 // Сортировка диапазона с компаратором по возрастанию
 template <typename RandomIt, typename Compare>
@@ -15,7 +14,7 @@ void InsertionSort::sort(RandomIt first, RandomIt last, Compare comp) {
     }
 
     for (RandomIt it = std::next(first); it != last; ++it) {
-        auto key = std::move(*it);
+        typename std::iterator_traits<RandomIt>::value_type key(std::move(*it));
         RandomIt j = it;
         
         while (j != first && comp(key, *(j - 1))) {
@@ -104,4 +103,3 @@ void InsertionSort::sort_descending(T* arr, std::size_t size) {
     }
 }
 
-#endif // INSERTION_SORT_CPP

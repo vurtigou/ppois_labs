@@ -9,94 +9,60 @@
 #include <algorithm>
 
 /**
- * @brief Обобщённый класс сортировки вставками (Insertion sort).
- * Эффективен для небольших массивов или частично отсортированных данных.
- * Поддерживает как встроенные, так и пользовательские типы через компараторы.
- * Предоставляет полную симметрию: сортировка по возрастанию и по убыванию.
+ * @brief Stable insertion sort for random-access ranges, vectors, and C arrays.
+ * @details The supplied comparator must impose a strict weak ordering.
  */
 class InsertionSort {
 public:
-    /**
-     * @brief Сортировка диапазона [first, last) по возрастанию с заданным компаратором.
-     * @tparam RandomIt Тип итератора произвольного доступа.
-     * @tparam Compare Тип функции сравнения (например, std::less<> или лямбда).
-     * @param first Начало диапазона.
-     * @param last Конец диапазона.
-     * @param comp Функция сравнения (возвращает true, если первый аргумент должен идти раньше второго).
-     */
+
+    /// Sorts the supplied range in ascending order using the supplied comparator.
     template <typename RandomIt, typename Compare>
     static void sort(RandomIt first, RandomIt last, Compare comp);
 
-    /**
-     * @brief Сортировка диапазона [first, last) по возрастанию (по умолчанию std::less).
-     * @tparam RandomIt Тип итератора произвольного доступа.
-     */
+    /// Sorts the supplied range in ascending order.
     template <typename RandomIt>
     static void sort(RandomIt first, RandomIt last);
 
-    /**
-     * @brief Сортировка диапазона [first, last) по убыванию с заданным компаратором.
-     * @tparam RandomIt Тип итератора произвольного доступа.
-     * @tparam Compare Тип функции сравнения.
-     */
+    /// Sorts the supplied range in descending order using the supplied comparator.
     template <typename RandomIt, typename Compare>
     static void sort_descending(RandomIt first, RandomIt last, Compare comp);
 
-    /**
-     * @brief Сортировка диапазона [first, last) по убыванию (по умолчанию std::greater).
-     * @tparam RandomIt Тип итератора произвольного доступа.
-     */
+    /// Sorts the supplied range in descending order.
     template <typename RandomIt>
     static void sort_descending(RandomIt first, RandomIt last);
 
-    /**
-     * @brief Сортировка вектора std::vector по возрастанию с компаратором.
-     */
+    /// Sorts the supplied vector in ascending order using the supplied comparator.
     template <typename T, typename Compare>
     static void sort(std::vector<T>& vec, Compare comp);
 
-    /**
-     * @brief Сортировка вектора std::vector по возрастанию.
-     */
+    /// Sorts the supplied vector in ascending order.
     template <typename T>
     static void sort(std::vector<T>& vec);
 
-    /**
-     * @brief Сортировка вектора std::vector по убыванию с компаратором.
-     */
+    /// Sorts the supplied vector in descending order using the supplied comparator.
     template <typename T, typename Compare>
     static void sort_descending(std::vector<T>& vec, Compare comp);
 
-    /**
-     * @brief Сортировка вектора std::vector по убыванию.
-     */
+    /// Sorts the supplied vector in descending order.
     template <typename T>
     static void sort_descending(std::vector<T>& vec);
 
-    /**
-     * @brief Сортировка C-массива по возрастанию с компаратором.
-     */
+    /// Sorts the first size elements of the supplied C array in ascending order using the supplied comparator.
     template <typename T, typename Compare>
     static void sort(T* arr, std::size_t size, Compare comp);
 
-    /**
-     * @brief Сортировка C-массива по возрастанию.
-     */
+    /// Sorts the first size elements of the supplied C array in ascending order.
     template <typename T>
     static void sort(T* arr, std::size_t size);
 
-    /**
-     * @brief Сортировка C-массива по убыванию с компаратором.
-     */
+    /// Sorts the first size elements of the supplied C array in descending order using the supplied comparator.
     template <typename T, typename Compare>
     static void sort_descending(T* arr, std::size_t size, Compare comp);
 
-    /**
-     * @brief Сортировка C-массива по убыванию.
-     */
+    /// Sorts the first size elements of the supplied C array in descending order.
     template <typename T>
     static void sort_descending(T* arr, std::size_t size);
 };
 
 // Шаблонные реализации подключаются в конце заголовочного файла
-#include "InsertionSort.cpp"
+#include "detail/InsertionSort.tpp"
