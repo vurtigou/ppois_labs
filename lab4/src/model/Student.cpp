@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iomanip>
 #include <ostream>
+#include <sstream>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 
@@ -14,8 +16,9 @@ Student::Student(int id, std::string fullName, std::string group, double gpa, in
     : id_(id),
       fullName_(std::move(fullName)),
       group_(std::move(group)),
-      gpa_(gpa),
-      age_(age) {}
+      age_(age) {
+    setGpa(gpa);
+}
 
 int Student::getId() const noexcept {
     return id_;
@@ -49,7 +52,8 @@ void Student::setGroup(std::string group) {
     group_ = std::move(group);
 }
 
-void Student::setGpa(double gpa) noexcept {
+void Student::setGpa(double gpa) {
+    if (!std::isfinite(gpa)) throw std::invalid_argument("Student GPA must be finite");
     gpa_ = gpa;
 }
 
@@ -63,12 +67,11 @@ bool Student::operator<(const Student& other) const noexcept {
 }
 
 bool Student::operator==(const Student& other) const noexcept {
-    constexpr double kEps = 1e-9;
     return id_ == other.id_ &&
            age_ == other.age_ &&
            fullName_ == other.fullName_ &&
            group_ == other.group_ &&
-           std::fabs(gpa_ - other.gpa_) < kEps;
+           gpa_ == other.gpa_;
 }
 
 bool Student::operator!=(const Student& other) const noexcept {
@@ -109,10 +112,12 @@ bool Student::compareByAge(const Student& a, const Student& b) noexcept {
 }
 
 std::ostream& operator<<(std::ostream& os, const Student& student) {
+    std::ostringstream grade;
+    grade << std::fixed << std::setprecision(2) << student.getGpa();
     os << "Student{id=" << student.getId()
        << ", name=\"" << student.getFullName() << "\""
        << ", group=\"" << student.getGroup() << "\""
-       << ", gpa=" << std::fixed << std::setprecision(2) << student.getGpa()
+       << ", gpa=" << grade.str()
        << ", age=" << student.getAge() << "}";
     return os;
 }

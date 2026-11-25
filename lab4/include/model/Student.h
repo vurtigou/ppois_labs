@@ -5,6 +5,7 @@
 
 namespace model {
 
+/// Sample value type for sorting students by grades, names, IDs, or other fields.
 class Student {
 public:
     Student();
@@ -25,10 +26,12 @@ public:
     void setId(int id) noexcept;
     void setFullName(std::string fullName);
     void setGroup(std::string group);
-    void setGpa(double gpa) noexcept;
+    /// Updates the GPA. Non-finite values throw std::invalid_argument.
+    void setGpa(double gpa);
     void setAge(int age) noexcept;
 
     // Основной порядок сравнения (по умолчанию по среднему баллу, затем по ID и ФИО)
+    /// Orders students by GPA, ID, full name, group, and age.
     bool operator<(const Student& other) const noexcept;
     bool operator==(const Student& other) const noexcept;
     bool operator!=(const Student& other) const noexcept;
