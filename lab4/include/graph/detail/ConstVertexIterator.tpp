@@ -1,10 +1,9 @@
-#ifndef CONSTVERTEXITERATOR_CPP
-#define CONSTVERTEXITERATOR_CPP
+#pragma once
 
-#include "ConstVertexIterator.h"
-#include "GraphException.h"
-#include "Graph.h"
-#include "VertexIterator.h"
+#include "../ConstVertexIterator.h"
+#include "../GraphException.h"
+#include "../Graph.h"
+#include "../VertexIterator.h"
 
 template <typename T>
 ConstVertexIterator<T>::ConstVertexIterator(const VertexIterator<T>& other) noexcept
@@ -59,4 +58,3 @@ bool ConstVertexIterator<T>::operator!=(const ConstVertexIterator& other) const 
     return !(*this == other);
 }
 
-#endif // CONSTVERTEXITERATOR_CPP

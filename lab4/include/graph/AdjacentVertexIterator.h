@@ -4,7 +4,12 @@
 #include <cstddef>
 #include <iterator>
 
-// Bidirectional iterator over outgoing neighbours (successors) of one vertex.
+/**
+ * @brief Traverses outgoing neighbors of a vertex of a mutable graph.
+ * @tparam T Type of the vertex label.
+ * @details Bidirectional, multi-pass traversal with read-only references.
+ * Dereferencing an unbound or end iterator throws GraphException.
+ */
 template <typename T>
 class AdjacentVertexIterator {
     friend class Graph<T>;
@@ -25,16 +30,22 @@ public:
     using reference = const T&;
 
     AdjacentVertexIterator() noexcept = default;
+    /// Returns a reference to the current element.
     reference operator*() const;
+    /// Returns a pointer to the current element.
     pointer operator->() const;
+    /// Advances by one position.
     AdjacentVertexIterator& operator++();
+    /// Advances by one position.
     AdjacentVertexIterator operator++(int);
+    /// Moves back by one position.
     AdjacentVertexIterator& operator--();
+    /// Moves back by one position.
     AdjacentVertexIterator operator--(int);
+    /// Checks whether the two cursors identify the same position.
     bool operator==(const AdjacentVertexIterator& other) const noexcept;
+    /// Checks whether the two cursors identify different positions.
     bool operator!=(const AdjacentVertexIterator& other) const noexcept;
-    operator ConstAdjacentVertexIterator<T>() const;
 };
 
-// Подключаем реализации (Edge-style) — иначе шаблон не инстанцируется в других TU
-#include "AdjacentVertexIterator.cpp"
+#include "detail/AdjacentVertexIterator.tpp"

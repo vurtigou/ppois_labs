@@ -1,10 +1,11 @@
-#ifndef CONSTEDGEITERATOR_CPP
-#define CONSTEDGEITERATOR_CPP
+#pragma once
 
-#include "ConstEdgeIterator.h"
-#include "EdgeIterator.h"
-#include "GraphException.h"
-#include "Graph.h"
+#include <memory>
+
+#include "../ConstEdgeIterator.h"
+#include "../EdgeIterator.h"
+#include "../GraphException.h"
+#include "../Graph.h"
 
 template <typename T>
 ConstEdgeIterator<T>::ConstEdgeIterator(const Graph<T>* graph, const void* source, const void* edgeCell)
@@ -22,8 +23,7 @@ typename ConstEdgeIterator<T>::reference ConstEdgeIterator<T>::operator*() const
 
 template <typename T>
 typename ConstEdgeIterator<T>::pointer ConstEdgeIterator<T>::operator->() const {
-    cache_.emplace(operator*());
-    return std::addressof(*cache_);
+    return std::addressof(operator*());
 }
 
 template <typename T>
@@ -34,7 +34,6 @@ ConstEdgeIterator<T>& ConstEdgeIterator<T>::operator++() {
     graph_->nextEdgeHandle(source_, edgeCell_, nextSource, nextCell);
     source_ = nextSource;
     edgeCell_ = nextCell;
-    cache_.reset();
     return *this;
 }
 
@@ -53,7 +52,6 @@ ConstEdgeIterator<T>& ConstEdgeIterator<T>::operator--() {
     graph_->previousEdgeHandle(source_, edgeCell_, previousSource, previousCell);
     source_ = previousSource;
     edgeCell_ = previousCell;
-    cache_.reset();
     return *this;
 }
 
@@ -74,4 +72,3 @@ bool ConstEdgeIterator<T>::operator!=(const ConstEdgeIterator& other) const noex
     return !(*this == other);
 }
 
-#endif // CONSTEDGEITERATOR_CPP

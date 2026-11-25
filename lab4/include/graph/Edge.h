@@ -3,7 +3,7 @@
 #include <ostream>
 #include <utility>
 
-//класс представляет собой хранилище данных без поведения, описывающее направленное ребро графа
+/// Directed edge value storing a source label and a destination label.
 template <typename T>
 class Edge {
 private:
@@ -16,7 +16,9 @@ public:
     Edge(T&& source, T&& destination);
 
     // Геттеры 
+    /// Returns the source vertex label.
     const T& getFrom() const { return from; }
+    /// Returns the destination vertex label.
     const T& getTo()   const { return to;   }
 
     // Операторы 
@@ -29,4 +31,4 @@ public:
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const Edge<T>& edge);
 
-#include "graph/Edge.cpp"
+#include "detail/Edge.tpp"

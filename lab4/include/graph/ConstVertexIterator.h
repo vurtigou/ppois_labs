@@ -4,7 +4,12 @@
 #include <cstddef>
 #include <iterator>
 
-// Read-only bidirectional iterator over vertices.
+/**
+ * @brief Traverses all vertex labels of a const graph.
+ * @tparam T Type of the vertex label.
+ * @details Bidirectional, multi-pass traversal with read-only references.
+ * Dereferencing an unbound or end iterator throws GraphException.
+ */
 template <typename T>
 class ConstVertexIterator {
     friend class Graph<T>;
@@ -25,15 +30,22 @@ public:
 
     ConstVertexIterator() noexcept = default;
     ConstVertexIterator(const VertexIterator<T>& other) noexcept;
+    /// Returns a reference to the current element.
     reference operator*() const;
+    /// Returns a pointer to the current element.
     pointer operator->() const;
+    /// Advances by one position.
     ConstVertexIterator& operator++();
+    /// Advances by one position.
     ConstVertexIterator operator++(int);
+    /// Moves back by one position.
     ConstVertexIterator& operator--();
+    /// Moves back by one position.
     ConstVertexIterator operator--(int);
+    /// Checks whether the two cursors identify the same position.
     bool operator==(const ConstVertexIterator& other) const noexcept;
+    /// Checks whether the two cursors identify different positions.
     bool operator!=(const ConstVertexIterator& other) const noexcept;
 };
 
-// Подключаем реализации (Edge-style) — иначе шаблон не инстанцируется в других TU
-#include "ConstVertexIterator.cpp"
+#include "detail/ConstVertexIterator.tpp"

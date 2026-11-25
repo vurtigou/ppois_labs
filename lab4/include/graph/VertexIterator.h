@@ -4,7 +4,12 @@
 #include <cstddef>
 #include <iterator>
 
-//Двунаправленный итератор по вершинам неконстантного графа. методы возвращают const T&, чтобы пользователь не мог через итератор менять метку вершины (иначе нарушилась бы уникальность вершин).
+/**
+ * @brief Traverses all vertex labels of a mutable graph.
+ * @tparam T Type of the vertex label.
+ * @details Bidirectional, multi-pass traversal with read-only references.
+ * Dereferencing an unbound or end iterator throws GraphException.
+ */
 template <typename T>
 class VertexIterator {
     friend class Graph<T>;
@@ -24,16 +29,22 @@ public:
     using reference = const T&;
 
     VertexIterator() noexcept = default;
+    /// Returns a reference to the current element.
     reference operator*() const;
+    /// Returns a pointer to the current element.
     pointer operator->() const;
+    /// Advances by one position.
     VertexIterator& operator++();
+    /// Advances by one position.
     VertexIterator operator++(int);
+    /// Moves back by one position.
     VertexIterator& operator--();
+    /// Moves back by one position.
     VertexIterator operator--(int);
+    /// Checks whether the two cursors identify the same position.
     bool operator==(const VertexIterator& other) const noexcept;
+    /// Checks whether the two cursors identify different positions.
     bool operator!=(const VertexIterator& other) const noexcept;
-    operator ConstVertexIterator<T>() const;
 };
 
-// Подключаем реализации
-#include "VertexIterator.cpp"
+#include "detail/VertexIterator.tpp"

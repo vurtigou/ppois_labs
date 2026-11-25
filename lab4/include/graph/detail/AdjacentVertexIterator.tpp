@@ -1,10 +1,9 @@
-#ifndef ADJACENTVERTEXITERATOR_CPP
-#define ADJACENTVERTEXITERATOR_CPP
+#pragma once
 
-#include "AdjacentVertexIterator.h"
-#include "ConstAdjacentVertexIterator.h"
-#include "GraphException.h"
-#include "Graph.h"
+#include "../AdjacentVertexIterator.h"
+#include "../ConstAdjacentVertexIterator.h"
+#include "../GraphException.h"
+#include "../Graph.h"
 
 template <typename T>
 typename AdjacentVertexIterator<T>::reference AdjacentVertexIterator<T>::operator*() const {
@@ -58,9 +57,4 @@ bool AdjacentVertexIterator<T>::operator!=(const AdjacentVertexIterator& other) 
     return !(*this == other);
 }
 
-template <typename T>
-AdjacentVertexIterator<T>::operator ConstAdjacentVertexIterator<T>() const {
-    return ConstAdjacentVertexIterator<T>(graph_, center_, index_);
-}
 
-#endif // ADJACENTVERTEXITERATOR_CPP

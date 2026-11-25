@@ -1,10 +1,11 @@
-#ifndef CONSTINCIDENTEDGEITERATOR_CPP
-#define CONSTINCIDENTEDGEITERATOR_CPP
+#pragma once
 
-#include "ConstIncidentEdgeIterator.h"
-#include "IncidentEdgeIterator.h"
-#include "GraphException.h"
-#include "Graph.h"
+#include <memory>
+
+#include "../ConstIncidentEdgeIterator.h"
+#include "../IncidentEdgeIterator.h"
+#include "../GraphException.h"
+#include "../Graph.h"
 
 template <typename T>
 ConstIncidentEdgeIterator<T>::ConstIncidentEdgeIterator(const IncidentEdgeIterator<T>& other) noexcept
@@ -19,8 +20,7 @@ typename ConstIncidentEdgeIterator<T>::reference ConstIncidentEdgeIterator<T>::o
 
 template <typename T>
 typename ConstIncidentEdgeIterator<T>::pointer ConstIncidentEdgeIterator<T>::operator->() const {
-    cache_.emplace(operator*());
-    return std::addressof(*cache_);
+    return std::addressof(operator*());
 }
 
 template <typename T>
@@ -28,7 +28,6 @@ ConstIncidentEdgeIterator<T>& ConstIncidentEdgeIterator<T>::operator++() {
     if (!graph_ || !center_ || index_ >= graph_->incidentEdgeCount(center_))
         throw GraphException("ConstIncidentEdgeIterator: incrementing an end or invalid iterator");
     ++index_;
-    cache_.reset();
     return *this;
 }
 
@@ -44,7 +43,6 @@ ConstIncidentEdgeIterator<T>& ConstIncidentEdgeIterator<T>::operator--() {
     if (!graph_ || !center_ || index_ == 0)
         throw GraphException("ConstIncidentEdgeIterator: decrementing before begin or an invalid iterator");
     --index_;
-    cache_.reset();
     return *this;
 }
 
@@ -65,4 +63,3 @@ bool ConstIncidentEdgeIterator<T>::operator!=(const ConstIncidentEdgeIterator& o
     return !(*this == other);
 }
 
-#endif // CONSTINCIDENTEDGEITERATOR_CPP

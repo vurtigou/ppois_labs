@@ -1,5 +1,8 @@
 #pragma once
 
+/// @file
+/// Forward declarations shared by the directed graph and iterator types.
+
 template <typename T> class Graph;
 template <typename T> class VertexIterator;
 template <typename T> class ConstVertexIterator;

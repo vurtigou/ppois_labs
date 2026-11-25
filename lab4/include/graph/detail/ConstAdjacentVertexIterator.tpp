@@ -1,10 +1,9 @@
-#ifndef CONSTADJACENTVERTEXITERATOR_CPP
-#define CONSTADJACENTVERTEXITERATOR_CPP
+#pragma once
 
-#include "ConstAdjacentVertexIterator.h"
-#include "AdjacentVertexIterator.h"
-#include "GraphException.h"
-#include "Graph.h"
+#include "../ConstAdjacentVertexIterator.h"
+#include "../AdjacentVertexIterator.h"
+#include "../GraphException.h"
+#include "../Graph.h"
 
 template <typename T>
 ConstAdjacentVertexIterator<T>::ConstAdjacentVertexIterator(const AdjacentVertexIterator<T>& other) noexcept
@@ -62,4 +61,3 @@ bool ConstAdjacentVertexIterator<T>::operator!=(const ConstAdjacentVertexIterato
     return !(*this == other);
 }
 
-#endif // CONSTADJACENTVERTEXITERATOR_CPP

@@ -1,7 +1,6 @@
-#ifndef EDGE_CPP
-#define EDGE_CPP
+#pragma once
 
-#include "graph/Edge.h"
+#include "../Edge.h"
 
 // Конструкторы
 
@@ -39,4 +38,3 @@ std::ostream& operator<<(std::ostream& out, const Edge<T>& edge) {
     return out << '(' << edge.getFrom() << " -> " << edge.getTo() << ')';
 }
 
-#endif // EDGE_CPP

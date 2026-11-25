@@ -4,10 +4,14 @@
 #include "Edge.h"
 #include <cstddef>
 #include <iterator>
-#include <optional>
 
 // Iterates over every edge touching a selected vertex: outgoing edges first,
-// then incoming edges. A loop at the selected vertex is yielded only once.
+/**
+ * @brief Traverses all arcs incident to a vertex of a mutable graph.
+ * @tparam T Type of the vertex label.
+ * @details Bidirectional, multi-pass traversal with read-only references.
+ * Dereferencing an unbound or end iterator throws GraphException.
+ */
 template <typename T>
 class IncidentEdgeIterator {
     friend class Graph<T>;
@@ -16,7 +20,6 @@ class IncidentEdgeIterator {
     Graph<T>* graph_ = nullptr;
     const void* center_ = nullptr;
     std::size_t index_ = 0;
-    mutable std::optional<Edge<T>> cache_;
 
     IncidentEdgeIterator(Graph<T>* graph, const void* center, std::size_t index) noexcept
         : graph_(graph), center_(center), index_(index) {}
@@ -26,19 +29,25 @@ public:
     using value_type = Edge<T>;
     using difference_type = std::ptrdiff_t;
     using pointer = const Edge<T>*;
-    using reference = Edge<T>;
+    using reference = const Edge<T>&;
 
     IncidentEdgeIterator() noexcept = default;
+    /// Returns a reference to the current element.
     reference operator*() const;
+    /// Returns a pointer to the current element.
     pointer operator->() const;
+    /// Advances by one position.
     IncidentEdgeIterator& operator++();
+    /// Advances by one position.
     IncidentEdgeIterator operator++(int);
+    /// Moves back by one position.
     IncidentEdgeIterator& operator--();
+    /// Moves back by one position.
     IncidentEdgeIterator operator--(int);
+    /// Checks whether the two cursors identify the same position.
     bool operator==(const IncidentEdgeIterator& other) const noexcept;
+    /// Checks whether the two cursors identify different positions.
     bool operator!=(const IncidentEdgeIterator& other) const noexcept;
-    operator ConstIncidentEdgeIterator<T>() const;
 };
 
-// Подключаем реализации (Edge-style) — иначе шаблон не инстанцируется в других TU
-#include "IncidentEdgeIterator.cpp"
+#include "detail/IncidentEdgeIterator.tpp"

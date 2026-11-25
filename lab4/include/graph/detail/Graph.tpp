@@ -1,8 +1,7 @@
-#ifndef GRAPH_CPP
-#define GRAPH_CPP
+#pragma once
 
-#include "Graph.h"
-#include "GraphException.h"
+#include "../Graph.h"
+#include "../GraphException.h"
 
 #include <algorithm>
 #include <memory>
@@ -179,12 +178,9 @@ void Graph<T>::previousEdgeHandle(const void* source, const void* edgeCell,
 }
 
 template <typename T>
-Edge<T> Graph<T>::edgeValue(const void* source, const void* edgeCell) const {
+const Edge<T>& Graph<T>::edgeValue(const void* source, const void* edgeCell) const {
     if (!source || !edgeCell) throw GraphException("Graph: invalid edge iterator");
-    const auto* fromNode = nodeFromHandle(source);
-    auto* toNode = *static_cast<VertexNode* const*>(edgeCell);
-    if (!toNode) throw GraphException("Graph: edge points to an invalid vertex");
-    return Edge<T>(fromNode->value, toNode->value);
+    return static_cast<const Arc*>(edgeCell)->edge;
 }
 
 template <typename T>
@@ -216,7 +212,7 @@ const T& Graph<T>::adjacentVertexValue(const void* center, std::size_t index) co
     if (index >= node->outgoing.size()) throw GraphException("Graph: adjacent-vertex iterator is at end");
     auto it = node->outgoing.cbegin();
     std::advance(it, static_cast<std::ptrdiff_t>(index));
-    return (*it)->value;
+    return it->destination->value;
 }
 
 template <typename T>
@@ -226,7 +222,8 @@ std::size_t Graph<T>::incidentEdgeCount(const void* center) const {
     std::size_t count = centerNode->outgoing.size();
     for (const auto& source : vertices_) {
         if (std::addressof(source) == centerNode) continue; // a loop is counted only in outgoing part
-        for (const auto* destination : source.outgoing) {
+        for (const auto& arc : source.outgoing) {
+            const auto* destination = arc.destination;
             if (destination == centerNode) ++count;
         }
     }
@@ -234,22 +231,23 @@ std::size_t Graph<T>::incidentEdgeCount(const void* center) const {
 }
 
 template <typename T>
-Edge<T> Graph<T>::incidentEdgeValue(const void* center, std::size_t index) const {
+const Edge<T>& Graph<T>::incidentEdgeValue(const void* center, std::size_t index) const {
     if (!center) throw GraphException("Graph: invalid center vertex for incident-edge iterator");
     const auto* centerNode = nodeFromHandle(center);
 
     if (index < centerNode->outgoing.size()) {
         auto it = centerNode->outgoing.cbegin();
         std::advance(it, static_cast<std::ptrdiff_t>(index));
-        return Edge<T>(centerNode->value, (*it)->value);
+        return it->edge;
     }
 
     index -= centerNode->outgoing.size();
     for (const auto& source : vertices_) {
         if (std::addressof(source) == centerNode) continue;
-        for (const auto* destination : source.outgoing) {
+        for (const auto& arc : source.outgoing) {
+            const auto* destination = arc.destination;
             if (destination == centerNode) {
-                if (index == 0) return Edge<T>(source.value, centerNode->value);
+                if (index == 0) return arc.edge;
                 --index;
             }
         }
@@ -263,7 +261,8 @@ template <typename T>
 Graph<T>::Graph(const Graph& other) {
     for (const auto& node : other.vertices_) addVertex(node.value);
     for (const auto& source : other.vertices_) {
-        for (const auto* destination : source.outgoing) {
+        for (const auto& arc : source.outgoing) {
+            const auto* destination = arc.destination;
             addEdge(source.value, destination->value);
         }
     }
@@ -321,10 +320,10 @@ bool Graph<T>::addEdge(const T& from, const T& to) {
     if (!source) throw GraphException("Graph::addEdge: source vertex does not exist");
     if (!destination) throw GraphException("Graph::addEdge: destination vertex does not exist");
 
-    for (const auto* existing : source->outgoing) {
-        if (existing == destination) return false;
+    for (const auto& arc : source->outgoing) {
+        if (arc.destination == destination) return false;
     }
-    source->outgoing.push_back(destination);
+    source->outgoing.emplace_back(destination, source->value, destination->value);
     ++edgeCount_;
     return true;
 }
@@ -346,7 +345,7 @@ void Graph<T>::eraseVertexHandle(const void* vertexHandle) {
     for (auto& source : vertices_) {
         if (std::addressof(source) == target) continue;
         for (auto edgeIt = source.outgoing.begin(); edgeIt != source.outgoing.end();) {
-            if (*edgeIt == target) {
+            if (edgeIt->destination == target) {
                 edgeIt = source.outgoing.erase(edgeIt);
                 ++incomingFromOtherVertices;
             } else {
@@ -373,7 +372,7 @@ void Graph<T>::removeEdge(const T& from, const T& to) {
     if (!source || !destination)
         throw GraphException("Graph::removeEdge: one or both endpoint vertices do not exist");
     for (auto it = source->outgoing.begin(); it != source->outgoing.end(); ++it) {
-        if (*it == destination) {
+        if (it->destination == destination) {
             source->outgoing.erase(it);
             --edgeCount_;
             return;
@@ -383,7 +382,7 @@ void Graph<T>::removeEdge(const T& from, const T& to) {
 }
 
 template <typename T>
-VertexIterator<T> Graph<T>::eraseVertex(VertexIterator<T> position) {
+VertexIterator<T> Graph<T>::eraseVertex(const ConstVertexIterator<T>& position) {
     if (position.graph_ != this || !position.node_)
         throw GraphException("Graph::eraseVertex: iterator is foreign or at end");
     const void* next = nextVertexHandle(position.node_);
@@ -392,7 +391,7 @@ VertexIterator<T> Graph<T>::eraseVertex(VertexIterator<T> position) {
 }
 
 template <typename T>
-EdgeIterator<T> Graph<T>::eraseEdge(EdgeIterator<T> position) {
+EdgeIterator<T> Graph<T>::eraseEdge(const ConstEdgeIterator<T>& position) {
     if (position.graph_ != this || !position.source_ || !position.edgeCell_)
         throw GraphException("Graph::eraseEdge: iterator is foreign or at end");
     const void* nextSource = nullptr;
@@ -412,8 +411,8 @@ bool Graph<T>::containsEdge(const T& from, const T& to) const {
     const VertexNode* source = findNode(from);
     const VertexNode* destination = findNode(to);
     if (!source || !destination) return false;
-    for (const auto* existing : source->outgoing) {
-        if (existing == destination) return true;
+    for (const auto& arc : source->outgoing) {
+        if (arc.destination == destination) return true;
     }
     return false;
 }
@@ -441,7 +440,8 @@ std::size_t Graph<T>::inDegree(const T& vertex) const {
     if (!node) throw GraphException("Graph::inDegree: vertex does not exist");
     std::size_t result = 0;
     for (const auto& source : vertices_) {
-        for (const auto* destination : source.outgoing) {
+        for (const auto& arc : source.outgoing) {
+            const auto* destination = arc.destination;
             if (destination == node) ++result;
         }
     }
@@ -462,7 +462,8 @@ std::size_t Graph<T>::edgeDegree(const T& from, const T& to) const {
 
     std::size_t result = 0;
     for (const auto& source : vertices_) {
-        for (const auto* destination : source.outgoing) {
+        for (const auto& arc : source.outgoing) {
+            const auto* destination = arc.destination;
             if (std::addressof(source) == edgeFrom && destination == edgeTo) continue;
             const bool sharesEndpoint =
                 (std::addressof(source) == edgeFrom) ||
@@ -708,8 +709,8 @@ std::vector<Edge<T>> Graph<T>::canonicalEdges() const {
     std::vector<Edge<T>> result;
     result.reserve(edgeCount_);
     for (const auto& source : vertices_) {
-        for (const auto* destination : source.outgoing) {
-            result.emplace_back(source.value, destination->value);
+        for (const auto& arc : source.outgoing) {
+            result.push_back(arc.edge);
         }
     }
     std::sort(result.begin(), result.end());
@@ -719,7 +720,13 @@ std::vector<Edge<T>> Graph<T>::canonicalEdges() const {
 template <typename T>
 bool Graph<T>::operator==(const Graph& other) const {
     if (vertexCount() != other.vertexCount() || edgeCount() != other.edgeCount()) return false;
-    return canonicalVertices() == other.canonicalVertices() && canonicalEdges() == other.canonicalEdges();
+    for (const auto& vertex : vertices_) {
+        if (!other.containsVertex(vertex.value)) return false;
+        for (const auto& arc : vertex.outgoing) {
+            if (!other.containsEdge(vertex.value, arc.destination->value)) return false;
+        }
+    }
+    return true;
 }
 
 template <typename T>
@@ -748,4 +755,3 @@ bool Graph<T>::operator<=(const Graph& other) const { return !(other < *this); }
 template <typename T>
 bool Graph<T>::operator>=(const Graph& other) const { return !(*this < other); }
 
-#endif // GRAPH_CPP

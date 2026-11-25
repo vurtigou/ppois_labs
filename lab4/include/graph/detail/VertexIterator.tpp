@@ -1,9 +1,8 @@
-#ifndef VERTEXITERATOR_CPP
-#define VERTEXITERATOR_CPP
+#pragma once
 
-#include "VertexIterator.h"
-#include "GraphException.h"
-#include "Graph.h"
+#include "../VertexIterator.h"
+#include "../GraphException.h"
+#include "../Graph.h"
 
 template <typename T>
 typename VertexIterator<T>::reference VertexIterator<T>::operator*() const {
@@ -54,9 +53,4 @@ bool VertexIterator<T>::operator!=(const VertexIterator& other) const noexcept {
     return !(*this == other);
 }
 
-template <typename T>
-VertexIterator<T>::operator ConstVertexIterator<T>() const {
-    return ConstVertexIterator<T>(graph_, node_);
-}
 
-#endif // VERTEXITERATOR_CPP
