@@ -1,0 +1,18 @@
+PROJECT_NAME           = "Lab 4 — Variant 6"
+PROJECT_BRIEF          = "Generic sorting and directed adjacency-list graph"
+OUTPUT_DIRECTORY       = build/doxygen
+OUTPUT_LANGUAGE        = English
+INPUT                  = README.md include src main.cpp
+FILE_PATTERNS          = *.h *.tpp *.cpp *.md
+EXTENSION_MAPPING      = tpp=C++
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = README.md
+MARKDOWN_SUPPORT       = YES
+EXTRACT_ALL            = YES
+SOURCE_BROWSER         = YES
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HAVE_DOT               = NO
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_DOC_ERROR      = YES
