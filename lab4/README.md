@@ -82,6 +82,6 @@ The lint target requires cppcheck. The sanitizer target requires a compiler with
 
 ## GitHub Actions
 
-The repository-level `.github/workflows/ci.yml` builds the project, runs both test suites, enforces coverage, runs static analysis, and generates documentation. It packages the Linux x86-64 executable, runs it after extraction, and uploads the archive as a workflow artifact. Push a tag such as `lab4-v1.0.0` or a versioned branch such as `release/lab4-v1.0.0` to publish the verified archive to GitHub Releases. A release branch creates the corresponding tag at the tested commit. Download `lab4-linux-x86_64.tar.gz` from the release, extract it, and run `./lab4` on Linux x86-64.
+The repository-level `.github/workflows/ci.yml` builds the project, runs both test suites, enforces coverage, runs static analysis, and generates documentation. It packages the Linux x86-64 executable, runs it after extraction, and uploads the archive as a workflow artifact. Pushing a tag such as `lab4-v1.0.0` publishes that verified archive to GitHub Releases. Download `lab4-linux-x86_64.tar.gz` from the release, extract it, and run `./lab4` on Linux x86-64.
 
 Course specifications are available in [Lab 4](https://github.com/alix-zzh/ppois-course/blob/master/ru/lab4.md) and [Common requirements](https://github.com/alix-zzh/ppois-course/blob/master/ru/common_requirements.md).
