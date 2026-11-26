@@ -177,22 +177,15 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get install -y g++ make
-      - name: Build Lab 4 release archive
-        working-directory: lab4
-        run: |
-          make clean
-          make
-          mkdir -p dist
-          cp build/lab4 dist/lab4
-          cp README.md dist/README.md
-          tar -czf lab4-linux-x86_64.tar.gz -C dist .
+      - name: Download verified Lab 4 archive
+        uses: actions/download-artifact@v4
+        with:
+          name: lab4-linux-x86_64
       - name: Publish Lab 4 release
         uses: softprops/action-gh-release@v2
         with:
           name: Lab 4 ${{ github.ref_name }}
-          files: lab4/lab4-linux-x86_64.tar.gz
+          files: lab4-linux-x86_64.tar.gz
+          fail_on_unmatched_files: true
           draft: false
           prerelease: false
