@@ -9,7 +9,7 @@ import tempfile
 
 
 def main():
-    gcov, build = sys.argv[1:]
+    gcov, build, report_name = sys.argv[1:]
     root = Path.cwd()
     notes = sorted(Path(build).resolve().rglob("*.gcno"))
     sources = {Path("main.cpp"), *Path("src").rglob("*.cpp"),
@@ -46,7 +46,7 @@ def main():
         raise SystemExit(f"Missing instrumentation for: {missing}")
 
     covered = total = 0
-    summary = []
+    summary = [report_name]
     for name, lines in sorted(hits.items()):
         hit = sum(count > 0 for count in lines.values())
         covered += hit
@@ -54,7 +54,7 @@ def main():
         summary.append(f"{str(name):54} {hit:4}/{len(lines):4}  {100 * hit / len(lines):6.2f}%")
     summary.append(f"Total line coverage: {covered}/{total} ({100 * covered / total:.2f}%)")
     text = "\n".join(summary) + "\n"
-    (report_dir / "coverage.txt").write_text(text, encoding="utf-8")
+    (report_dir / report_name).write_text(text, encoding="utf-8")
     print(text, end="")
     if covered * 100 <= total * 90:
         raise SystemExit("Coverage must be strictly greater than 90%.")

@@ -70,7 +70,7 @@ Iterators belong to their graph. Treat assignment, move, swap, clear, and any mu
 
 `make test` runs the C++ unit suite and separate CLI sessions. The suite checks both algorithms against the standard library, covers stable ordering and extreme keys, exercises iterator variants and error paths, and compares a sequence of graph changes against an independent adjacency-matrix model.
 
-Run `make coverage` to regenerate `build/coverage/coverage.txt`. The script merges instrumented executable lines across translation units by file and line, includes production templates and the CLI, and excludes test code and system headers. It fails the build at **90% or lower**. The verified GCC 14.2.0 result is **98.70%** (1,061 of 1,075 executable lines).
+Run `make coverage` to generate `build/coverage/unit-coverage.txt` for the unit suite and `build/coverage/coverage.txt` for unit and CLI integration tests together. The unit suite exercises the menu through in-memory streams. Both reports count production lines, including the CLI and entry point, and exclude test code and system headers. Each report must exceed **90%**. With GCC 14.2.0 the unit suite covers **97.87%** (1,055 of 1,078 executable lines), and the combined run covers **98.70%** (1,064 of 1,078).
 
 ```sh
 make -C lab4 lint

@@ -10,7 +10,8 @@ CXXFLAGS += -std=c++17 -Wall -Wextra -Wpedantic
 
 MODEL_SOURCES := src/graph/GraphException.cpp src/model/Student.cpp
 MODEL_OBJECTS := $(MODEL_SOURCES:%.cpp=$(BUILD_DIR)/%.o)
-APP_OBJECTS := $(BUILD_DIR)/main.o $(BUILD_DIR)/src/cli/ConsoleMenu.o
+CLI_OBJECT := $(BUILD_DIR)/src/cli/ConsoleMenu.o
+APP_OBJECTS := $(BUILD_DIR)/main.o $(CLI_OBJECT)
 TEST_OBJECTS := $(BUILD_DIR)/tests/test_lab4.o
 OBJECTS := $(MODEL_OBJECTS) $(APP_OBJECTS) $(TEST_OBJECTS)
 
@@ -20,7 +21,7 @@ all: $(BUILD_DIR)/lab4
 $(BUILD_DIR)/lab4: $(MODEL_OBJECTS) $(APP_OBJECTS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(BUILD_DIR)/unit_tests: $(MODEL_OBJECTS) $(TEST_OBJECTS)
+$(BUILD_DIR)/unit_tests: $(MODEL_OBJECTS) $(CLI_OBJECT) $(TEST_OBJECTS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(BUILD_DIR)/%.o: %.cpp
@@ -36,8 +37,10 @@ coverage:
 
 coverage-run: $(BUILD_DIR)/unit_tests $(BUILD_DIR)/lab4
 	find $(BUILD_DIR) -name '*.gcda' -delete
-	$(MAKE) BUILD_DIR=$(BUILD_DIR) test
-	$(PYTHON) scripts/check_coverage.py "$(GCOV)" "$(BUILD_DIR)"
+	$(BUILD_DIR)/unit_tests
+	$(PYTHON) scripts/check_coverage.py "$(GCOV)" "$(BUILD_DIR)" unit-coverage.txt
+	$(PYTHON) tests/test_cli.py $(BUILD_DIR)/lab4
+	$(PYTHON) scripts/check_coverage.py "$(GCOV)" "$(BUILD_DIR)" coverage.txt
 
 sanitize:
 	$(MAKE) BUILD_DIR=$(BUILD_DIR)/sanitizers CXXFLAGS="-std=c++17 -O1 -g -Wall -Wextra -Wpedantic -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address,undefined" test

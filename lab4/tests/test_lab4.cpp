@@ -1,3 +1,4 @@
+#include "cli/ConsoleMenu.h"
 #include "graph/Graph.h"
 #include "model/Student.h"
 #include "sorting/CountingSort.h"
@@ -8,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -408,6 +410,36 @@ void testGraphAgainstMatrix() {
     }
 }
 
+void checkMenu(const char* commands, std::initializer_list<const char*> expected) {
+    std::istringstream input(commands);
+    std::ostringstream output;
+    cli::ConsoleMenu{}.run(input, output);
+    const auto text = output.str();
+    for (const auto* message : expected) {
+        if (text.find(message) == std::string::npos) {
+            throw std::runtime_error(std::string("Missing menu output: ") + message);
+        }
+        ++assertions;
+    }
+}
+
+void testSortingMenu() {
+    checkMenu("bad\n1\n1\n2\n3\n7 -3 7 0\n3\n2 bad\n0\n0\n",
+              {"Enter one integer.", "Insertion sort, student array by name",
+               "Counting sort, student vector by age", "Both algorithms agree with std::sort: true",
+               "Insertion sort result\n  -3\n  0\n  7\n  7",
+               "Counting sort result\n  -3\n  0\n  7\n  7", "Invalid integer: bad"});
+}
+
+void testGraphMenu() {
+    checkMenu("2\n1\n1\n1\n2\n2\n1\n2\n5\n1\n6\n1\n2\n7\n8\n4\n1\n2\n3\n1\n9\n7\n0\n0\n",
+              {"Vertex added.", "Edge added.", "Vertex 1 in-degree: 0, out-degree: 1, total: 1",
+               "Outgoing neighbors: 2", "Incident edges in reverse:", "Edge degree: 0",
+               "2 vertices, 1 edges", "Copy matches graph: true", "Edge removed.",
+               "Vertex removed.", "Graph cleared.", "0 vertices, 0 edges"});
+    checkMenu("2\n5\n99\n", {"Error: Graph::inDegree: vertex does not exist"});
+}
+
 } // namespace
 
 int main() {
@@ -417,6 +449,8 @@ int main() {
         testIterators();
         testGraphOperations();
         testGraphAgainstMatrix();
+        testSortingMenu();
+        testGraphMenu();
         std::cout << "Unit tests passed (" << assertions << " checks).\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
