@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'feature/**'
+      - 'release/lab4-v*'
     tags:
       - 'lab1-v*'
       - 'lab2-v*'
@@ -172,11 +173,16 @@ jobs:
   release-lab4:
     name: Release Lab 4
     needs: [lab1, lab2, lab4]
-    if: startsWith(github.ref, 'refs/tags/lab4-v')
+    if: startsWith(github.ref, 'refs/tags/lab4-v') || startsWith(github.ref, 'refs/heads/release/lab4-v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Determine release tag
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: echo "tag=${REF_NAME#release/}" >> "$GITHUB_OUTPUT"
       - name: Download verified Lab 4 archive
         uses: actions/download-artifact@v4
         with:
@@ -184,7 +190,10 @@ jobs:
       - name: Publish Lab 4 release
         uses: softprops/action-gh-release@v2
         with:
-          name: Lab 4 ${{ github.ref_name }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Lab 4 ${{ steps.version.outputs.tag }}
+          overwrite_files: false
           files: lab4-linux-x86_64.tar.gz
           fail_on_unmatched_files: true
           draft: false
